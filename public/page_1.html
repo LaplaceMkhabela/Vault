@@ -184,5 +184,14 @@
       <p class="sub-note">Secure · Private · Free</p>
     </div>
   </div>
+
+  <script>
+    document.getElementById('getStartedBtn').addEventListener('click', function() {
+      this.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+      document.body.style.transition = 'opacity .4s';
+      document.body.style.opacity = '0';
+      setTimeout(() => { window.location.href = '/how-it-works'; }, 400);
+    });
+  </script>
 </body>
 </html>

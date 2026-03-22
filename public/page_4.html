@@ -186,6 +186,66 @@
     <p class="footer-note">Already have an account? <a href="/login">Sign in</a></p>
 
   </div>
+  <script>
+    // Password visibility toggle
+    document.querySelector('.eye-btn').addEventListener('click', function() {
+      const inp = this.closest('.input-wrap').querySelector('input');
+      const ic  = this.querySelector('i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ic.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        ic.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    });
+
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn      = this.querySelector('button[type="submit"]');
+      const nameEl   = this.querySelector('input[type="text"]');
+      const emailEl  = this.querySelector('input[type="email"]');
+      const passEl   = this.querySelector('input[type="password"]');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Setting up...';
+
+      try {
+        const res  = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nameEl.value, email: emailEl.value, password: passEl.value })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Registration failed. Please try again.');
+          btn.innerHTML = 'Create Account <i class="fas fa-arrow-right" style="font-size:.7rem;"></i>';
+          btn.disabled = false;
+          return;
+        }
+
+        btn.innerHTML = '<i class="fas fa-check"></i> Welcome to Vault';
+        setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+
+      } catch {
+        showError('Network error. Please try again.');
+        btn.innerHTML = 'Create Account';
+        btn.disabled = false;
+      }
+    });
+
+    function showError(msg) {
+      let el = document.getElementById('form-error');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'form-error';
+        el.className = 'form-error';
+        document.getElementById('registrationForm').prepend(el);
+      }
+      el.textContent = msg;
+    }
+  </script>
   
 </body>
 </html>

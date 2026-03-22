@@ -90,6 +90,21 @@
     }
     .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
     .btn-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    /* Or divider */
+    .or-divider { position:relative; text-align:center; margin:1.4rem 0; }
+    .or-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:var(--border); }
+    .or-divider span { position:relative; background:var(--card); padding:0 1rem; font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+
+    /* Social */
+    .social-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+    .btn-social {
+      display:flex; align-items:center; justify-content:center; gap:.55rem;
+      padding:.72rem; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500;
+      cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .btn-social:hover { border-color:var(--border-gold); background:var(--gold-dim); }
   </style>
 </head>
 <body>

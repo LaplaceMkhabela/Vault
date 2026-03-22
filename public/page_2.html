@@ -75,6 +75,49 @@
     }
     .goal-card i { font-size: 1.5rem; }
     .goal-card span { font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--text-muted); }
+    /* Step cards */
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; width:100%; max-width:700px; margin-bottom:2.5rem; }
+    @media(max-width:600px){ .steps { grid-template-columns:1fr; max-width:340px; } }
+    .step-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem 1.25rem;
+      display: flex; flex-direction: column; align-items: flex-start; gap: .75rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .step-card:hover { border-color: var(--border-gold); transform: translateY(-2px); }
+    .step-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--gold-dim);
+      border: 1px solid rgba(201,169,110,.2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-icon i { color: var(--gold); font-size: .9rem; }
+    .step-card h3 { font-size: .85rem; font-weight: 600; letter-spacing: .05em; }
+    .step-card p { font-size: .8rem; color: var(--text-muted); line-height: 1.6; }
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: .75rem;
+      width:100%; max-width:280px;
+      background: linear-gradient(135deg, #c9a96e 0%, #a8844a 100%);
+      color: #07080f; font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      padding:.9rem 2rem; border:none; border-radius:4px; cursor:pointer;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 6px 24px rgba(201,169,110,.2);
+    }
+    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-ghost {
+      background:none; border:none; cursor:pointer;
+      color: var(--text-muted); font-family:'DM Sans',sans-serif;
+      font-size:.78rem; letter-spacing:.1em; text-transform:uppercase;
+      padding:.6rem; margin-top:.75rem;
+      transition: color .2s;
+    }
+    .btn-ghost:hover { color: var(--text); }
+    /* Appear */
+    .appear { opacity:0; transform:translateY(14px); animation: appear .7s ease-out forwards; }
+    @keyframes appear { to { opacity:1; transform:translateY(0); } }
+    .d1{animation-delay:.05s} .d2{animation-delay:.2s} .d3{animation-delay:.35s} .d4{animation-delay:.5s}
   </style>
 </head>
 <body>

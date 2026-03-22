@@ -43,6 +43,7 @@
     }
     .logo-icon i { color:var(--gold); font-size:.85rem; }
     .logo-name { font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:400; letter-spacing:.1em; }
+    
     /* Card */
     .card {
       width:100%; max-width:420px;
@@ -51,6 +52,7 @@
     }
     .card-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:400; letter-spacing:.02em; margin-bottom:.3rem; }
     .card-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:1.75rem; line-height:1.5; }
+
     /* Fields */
     .field { margin-bottom:1.1rem; }
     .field label { display:block; font-size:.7rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.45rem; }
@@ -71,12 +73,14 @@
       transition:color .2s;
     }
     .eye-btn:hover { color:var(--gold); }
+
     /* Terms */
     .terms { display:flex; align-items:flex-start; gap:.7rem; margin-bottom:1.4rem; }
     .terms input[type=checkbox] { width:15px; height:15px; accent-color:var(--gold); margin-top:2px; flex-shrink:0; }
     .terms label { font-size:.77rem; color:var(--text-muted); line-height:1.5; }
     .terms a { color:var(--gold); text-decoration:none; }
     .terms a:hover { text-decoration:underline; }
+
     /* Submit */
     .btn-submit {
       width:100%; padding:.9rem;
@@ -90,6 +94,7 @@
     }
     .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
     .btn-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
     /* Or divider */
     .or-divider { position:relative; text-align:center; margin:1.4rem 0; }
     .or-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:var(--border); }
@@ -105,10 +110,14 @@
       cursor:pointer; transition:border-color .2s, background .2s;
     }
     .btn-social:hover { border-color:var(--border-gold); background:var(--gold-dim); }
+
     /* Footer note */
     .footer-note { margin-top:1.4rem; text-align:center; font-size:.8rem; color:var(--text-muted); }
     .footer-note a { color:var(--gold); text-decoration:none; font-weight:600; }
     .footer-note a:hover { text-decoration:underline; }
+
+     /* Error */
+    .form-error { color:var(--error); font-size:.8rem; text-align:center; margin-bottom:.7rem; }
   </style>
 </head>
 <body>

@@ -77,6 +77,19 @@
     .terms label { font-size:.77rem; color:var(--text-muted); line-height:1.5; }
     .terms a { color:var(--gold); text-decoration:none; }
     .terms a:hover { text-decoration:underline; }
+    /* Submit */
+    .btn-submit {
+      width:100%; padding:.9rem;
+      background:linear-gradient(135deg,#c9a96e,#a8844a);
+      color:#07080f; font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      border:none; border-radius:8px; cursor:pointer;
+      box-shadow:0 6px 24px rgba(201,169,110,.2);
+      transition:opacity .2s, transform .15s;
+      display:flex; align-items:center; justify-content:center; gap:.6rem;
+    }
+    .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
   </style>
 </head>
 <body>

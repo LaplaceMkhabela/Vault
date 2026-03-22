@@ -57,6 +57,23 @@
       align-items: center; justify-content: center;
       padding: 2rem 1.5rem;
     }
+
+    /* ── Logo mark ── */
+    .logo-mark {
+      width: 72px; height: 72px;
+      border: 1px solid var(--border-gold, rgba(201,169,110,0.3));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(201,169,110,0.1), rgba(201,169,110,0.04));
+      margin-bottom: 2rem;
+      animation: floatMark 4s ease-in-out infinite;
+    }
+    .logo-mark i { color: var(--gold); font-size: 1.75rem; }
+
+    @keyframes floatMark {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
   </style>
 </head>
 <body>

@@ -78,6 +78,12 @@
     </div>
 
   </div>
-
+  <script>
+    function handleNext() {
+      document.body.style.transition = 'opacity .4s';
+      document.body.style.opacity = '0';
+      setTimeout(() => { window.location.href = '/security'; }, 400);
+    }
+  </script>
 </body>
 </html>

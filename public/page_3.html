@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault — Security</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    :root {
+      --bg:#07080f; --card:#131720; --border:rgba(255,255,255,0.07);
+      --border-gold:rgba(201,169,110,0.2); --gold:#c9a96e; --gold-dim:rgba(201,169,110,0.1);
+      --text:#f0e9df; --text-muted:rgba(240,233,223,0.45);
+    }
+    html,body { min-height:100%; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+    .bg-mesh {
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,169,110,0.07) 0%, transparent 60%);
+    }
+    .grain {
+      position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.025;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px;
+    }
+    .page {
+      position:relative; z-index:2; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:3rem 1.5rem;
+    }
+    /* Shield */
+    .shield-wrap { position:relative; width:80px; height:80px; margin:0 auto 2.5rem; }
+    .shield-ring {
+      position:absolute; inset:-8px; border-radius:50%;
+      border: 1px solid rgba(201,169,110,.2);
+      animation: ringPulse 2.5s ease-in-out infinite;
+    }
+    .shield-ring-2 {
+      position:absolute; inset:-18px; border-radius:50%;
+      border: 1px solid rgba(201,169,110,.08);
+      animation: ringPulse 2.5s ease-in-out infinite .4s;
+    }
+    @keyframes ringPulse {
+      0%,100% { transform:scale(1); opacity:1; }
+      50%      { transform:scale(1.08); opacity:.5; }
+    }
+    .shield-core {
+      width:80px; height:80px; border-radius:50%;
+      background: linear-gradient(135deg, rgba(201,169,110,.12), rgba(201,169,110,.04));
+      border: 1px solid var(--border-gold);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .shield-core i { color:var(--gold); font-size:1.75rem; }
+    /* Title */
+    .title {
+      font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,5vw,2.6rem);
+      font-weight:400; letter-spacing:.02em; text-align:center; margin-bottom:.5rem;
+    }
+    .sub { font-size:.78rem; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:2rem; text-align:center; }
+    .desc { max-width:320px; text-align:center; color:var(--text-muted); font-size:.9rem; line-height:1.7; margin-bottom:2.5rem; }
+    /* Feature rows */
+    .features { width:100%; max-width:360px; display:flex; flex-direction:column; gap:.75rem; margin-bottom:2.5rem; }
+    .feature-row {
+      display:flex; align-items:center; gap:1rem;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:10px; padding:1rem 1.25rem;
+      transition: border-color .2s;
+    }
+    .feature-row:hover { border-color:var(--border-gold); }
+    .feat-icon {
+      width:36px; height:36px; border-radius:8px; background:var(--gold-dim);
+      border:1px solid rgba(201,169,110,.15);
+      display:flex; align-items:center; justify-content:center; shrink:0; flex-shrink:0;
+    }
+    .feat-icon i { color:var(--gold); font-size:.85rem; }
+    .feature-row span { font-size:.85rem; font-weight:500; }
+    /* Buttons */
+    .btn-primary {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:100%; max-width:280px;
+      background:linear-gradient(135deg,#c9a96e 0%,#a8844a 100%);
+      color:#07080f; font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      padding:.9rem 2rem; border:none; border-radius:4px; cursor:pointer;
+      box-shadow:0 6px 24px rgba(201,169,110,.2);
+      transition:opacity .2s, transform .15s;
+    }
+    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-outline {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:100%; max-width:280px;
+      background:transparent; border:1px solid var(--border-gold);
+      color:var(--gold); font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:500; letter-spacing:.1em; text-transform:uppercase;
+      padding:.85rem 2rem; border-radius:4px; cursor:pointer;
+      transition:background .2s, transform .15s;
+    }
+    .btn-outline:hover { background:var(--gold-dim); transform:translateY(-1px); }
+    .btn-ghost {
+      background:none; border:none; cursor:pointer; color:var(--text-muted);
+      font-family:'DM Sans',sans-serif; font-size:.75rem; letter-spacing:.12em;
+      text-transform:uppercase; padding:.5rem; margin-top:.5rem;
+      transition:color .2s;
+    }
+    .btn-ghost:hover { color:var(--text); }
+    .appear { opacity:0; transform:translateY(14px); animation:appear .7s ease-out forwards; }
+    @keyframes appear { to { opacity:1; transform:translateY(0); } }
+    .d1{animation-delay:.05s} .d2{animation-delay:.2s} .d3{animation-delay:.35s} .d4{animation-delay:.5s} .d5{animation-delay:.6s}
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="grain"></div>
+  <div class="page">
+
+    <div class="appear d1">
+      <div class="shield-wrap">
+        <div class="shield-ring"></div>
+        <div class="shield-ring-2"></div>
+        <div class="shield-core"><i class="fas fa-shield-alt"></i></div>
+      </div>
+    </div>
+
+    <div class="appear d2" style="text-align:center;">
+      <p class="sub">Your vault is protected</p>
+      <h2 class="title">Security & Control</h2>
+    </div>
+
+    <p class="desc appear d2">Everything you save is yours alone. You set the rules — we enforce them.</p>
+
+    <div class="features appear d3">
+      <div class="feature-row">
+        <div class="feat-icon"><i class="fas fa-lock"></i></div>
+        <span>Encrypted Authentication</span>
+      </div>
+      <div class="feature-row">
+        <div class="feat-icon"><i class="fas fa-exchange-alt"></i></div>
+        <span>Flexible Withdrawals</span>
+      </div>
+      <div class="feature-row">
+        <div class="feat-icon"><i class="fas fa-sliders-h"></i></div>
+        <span>You Set the Rules</span>
+      </div>
+    </div>
+
+    <div class="appear d4" style="display:flex; flex-direction:column; align-items:center; gap:.75rem; width:100%;">
+      <button class="btn-primary" onclick="window.location.href='/signup'">Create Account</button>
+      <button class="btn-outline" onclick="window.location.href='/login'">Sign In</button>
+      <button class="btn-ghost" onclick="window.location.href='/how-it-works'">← Back</button>
+    </div>
+
+  </div>
+</body>
+</html>

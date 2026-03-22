@@ -51,6 +51,26 @@
     }
     .card-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:400; letter-spacing:.02em; margin-bottom:.3rem; }
     .card-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:1.75rem; line-height:1.5; }
+    /* Fields */
+    .field { margin-bottom:1.1rem; }
+    .field label { display:block; font-size:.7rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.45rem; }
+    .input-wrap { position:relative; }
+    .input-wrap .icon { position:absolute; left:.9rem; top:50%; transform:translateY(-50%); color:rgba(240,233,223,0.25); font-size:.78rem; pointer-events:none; }
+    .input-wrap input {
+      width:100%; padding:.8rem .9rem .8rem 2.35rem;
+      background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color:rgba(240,233,223,0.2); }
+    .input-wrap input:focus { border-color:rgba(201,169,110,.4); box-shadow:0 0 0 3px rgba(201,169,110,.08); }
+    .eye-btn {
+      position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer;
+      color:rgba(240,233,223,0.25); font-size:.78rem;
+      transition:color .2s;
+    }
+    .eye-btn:hover { color:var(--gold); }
   </style>
 </head>
 <body>

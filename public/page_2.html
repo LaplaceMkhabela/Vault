@@ -55,6 +55,26 @@
       font-size: .8rem; letter-spacing: .2em; text-transform: uppercase;
       color: var(--gold); margin-bottom: 2.5rem;
     }
+    /* Goal preview cards */
+    .goal-cards {
+      display: flex; gap: 1rem; justify-content: center;
+      align-items: flex-end; margin-bottom: 2rem;
+    }
+    .goal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1rem;
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+      min-width: 80px; transition: transform .2s, border-color .2s;
+    }
+    .goal-card.featured {
+      border-color: var(--border-gold);
+      background: linear-gradient(160deg, rgba(201,169,110,0.1), rgba(201,169,110,0.04));
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.4);
+    }
+    .goal-card i { font-size: 1.5rem; }
+    .goal-card span { font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--text-muted); }
   </style>
 </head>
 <body>

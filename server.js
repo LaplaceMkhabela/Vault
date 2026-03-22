@@ -43,6 +43,18 @@ function requireAuth(req, res, next) {
   res.redirect('/login');
 }
 
+// ═══════════════════════════════════════════════════════════
+//  PAGE ROUTES
+// ═══════════════════════════════════════════════════════════
+
+const page = (f) => path.join(__dirname, 'public', f);
+
+app.get('/',             (_req, res) => res.sendFile(page('page_1.html')));
+app.get('/how-it-works', (_req, res) => res.sendFile(page('page_2.html')));
+app.get('/security',     (_req, res) => res.sendFile(page('page_3.html')));
+app.get('/signup',       (_req, res) => res.sendFile(page('page_4.html')));
+app.get('/login',        (_req, res) => res.sendFile(page('page_5.html')));
+app.get('/dashboard', requireAuth, (_req, res) => res.sendFile(page('dashboard.html')));
 
 const app  = express();
 const PORT = process.env.PORT || 3000;

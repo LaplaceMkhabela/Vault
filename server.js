@@ -481,9 +481,8 @@ GUIDANCE:
 
 /** POST /api/advisor/chat */
 app.post('/api/advisor/chat', requireAuth, async (req, res) => {
-  //const GROQ_API_KEY = "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";
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
-  
+
   if (!GROQ_API_KEY)
     return res.status(503).json({ error: 'Advisor is not configured. Set GROQ_API_KEY in your environment.' });
 

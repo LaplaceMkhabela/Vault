@@ -11,7 +11,6 @@ const session  = require('express-session');
 const bcrypt   = require('bcryptjs');
 const path     = require('path');
 const { v4: uuidv4 } = require('uuid');
-const db = require('./db');
 
 // ── Database ──────────────────────────────────────────────────
 const db = require('./db');

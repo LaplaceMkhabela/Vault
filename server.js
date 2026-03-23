@@ -1,10 +1,41 @@
 'use strict';
 
+// Suppress the "SQLite is experimental" warning on Node 22
+// (it's stable in Node 23+ and fully production-ready in both)
 const { emitWarning } = process;
 process.emitWarning = (warning, ...args) => {
   if (typeof warning === 'string' && warning.includes('SQLite')) return;
   emitWarning.call(process, warning, ...args);
 };
+
+/**
+ * PiggyBank — Express Server  (SQLite edition)
+ * ─────────────────────────────────────────────────────────────
+ * Routes
+ *   GET  /                  → Landing page  (page_1)
+ *   GET  /how-it-works      → How It Works  (page_2)
+ *   GET  /security          → Security      (page_3)
+ *   GET  /signup            → Sign Up form  (page_4)
+ *   GET  /login             → Login form    (page_5)
+ *   GET  /dashboard         → Dashboard     (protected)
+ *
+ * API
+ *   POST /api/register              → Create account
+ *   POST /api/login                 → Authenticate
+ *   POST /api/logout                → Destroy session
+ *   GET  /api/me                    → Current user (protected)
+ *
+ *   GET    /api/piggybanks              → List banks
+ *   POST   /api/piggybanks              → Create bank
+ *   POST   /api/piggybanks/:id/deposit  → Deposit
+ *   POST   /api/piggybanks/:id/withdraw → Withdraw
+ *   DELETE /api/piggybanks/:id          → Delete bank
+ *
+ *   GET  /api/stats          → Streak + summary stats
+ *   GET  /api/badges         → Earned badges
+ *   POST /api/advisor/chat   → Marcus (Groq / Llama-3)
+ * ─────────────────────────────────────────────────────────────
+ */
 
 const express  = require('express');
 const session  = require('express-session');

@@ -382,5 +382,128 @@ app.get('/api/badges', requireAuth, (req, res) => {
   })));
 });
 
+// ═══════════════════════════════════════════════════════════
+//  ADVISOR — Marcus (Groq / Llama-3)
+// ═══════════════════════════════════════════════════════════
+
+function buildSystemPrompt(user, stats, banks) {
+  const bankSummary = banks.length
+    ? banks.map(b => {
+        const pct    = b.goal > 0 ? ((b.balance / b.goal) * 100).toFixed(0) : null;
+        const policy = {
+          free:             'no withdrawal restrictions',
+          goal_only:        'locked until goal is reached',
+          cooling:          `cooling period of ${b.coolingDays} days`,
+          goal_and_cooling: `locked until goal AND ${b.coolingDays}-day cooling period`,
+        }[b.withdrawalPolicy] || 'no restrictions';
+        return `• "${b.name}" — balance $${b.balance.toFixed(2)}${b.goal > 0 ? `, goal $${b.goal.toFixed(2)} (${pct}% there)` : ', no goal set'}, policy: ${policy}`;
+      }).join('\n')
+    : '• No piggy banks created yet.';
+
+  const first       = user.name.split(' ')[0];
+  const streakNote  = stats.currentStreak >= 3
+    ? `${first} is on a ${stats.currentStreak}-day savings streak right now — acknowledge this positively when it comes up naturally.`
+    : stats.currentStreak === 0
+      ? `${first} hasn't saved anything yet today — gently encourage them without being preachy.`
+      : '';
+
+  return `You are Marcus — a warm, straight-talking personal finance advisor. You're like that friend everyone wishes they had: the one who actually works in finance and will give you a real, honest opinion over WhatsApp rather than a corporate spiel.
+
+PERSONALITY:
+- Conversational and direct. You use first names naturally but not in every sentence.
+- You give concrete, specific advice — not vague platitudes.
+- You're occasionally witty but never flippant about someone's financial situation.
+- You never say "As an AI", "I'm a language model", "I cannot" or anything that sounds robotic. You are Marcus.
+- You keep replies concise — this is a chat, not an essay. 2–4 short paragraphs maximum unless the user explicitly asks for detail.
+- You don't use bullet points or markdown. Write like you're texting.
+- You use their first name sparingly and naturally.
+- When you don't know something, say so honestly like a human would.
+
+YOUR CLIENT'S PROFILE:
+Name: ${user.name}
+Member since: ${new Date(user.createdAt).toLocaleDateString('en', { month: 'long', year: 'numeric' })}
+Total currently saved: $${stats.totalSaved.toFixed(2)}
+Total deposited ever: $${stats.totalSavedEver.toFixed(2)}
+Current savings streak: ${stats.currentStreak} day${stats.currentStreak !== 1 ? 's' : ''}
+Longest streak ever: ${stats.longestStreak} days
+Total deposits made: ${stats.totalDeposits}
+Savings goals reached: ${stats.goalsMet}
+Piggy banks: ${stats.bankCount}
+
+THEIR PIGGY BANKS:
+${bankSummary}
+
+${streakNote}
+
+GUIDANCE:
+- Base advice on their actual numbers. Be specific.
+- If they're close to a goal, call it out.
+- Encourage streaks and consistency over big one-time deposits.
+- If they seem discouraged, be honest but supportive — don't just cheerlead.
+- Never invent numbers. If you need more info, ask one clear question.`;
+}
+
+/** POST /api/advisor/chat */
+app.post('/api/advisor/chat', requireAuth, async (req, res) => {
+  const GROQ_API_KEY = "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";
+  if (!GROQ_API_KEY)
+    return res.status(503).json({ error: 'Advisor is not configured. Set GROQ_API_KEY in your environment.' });
+
+  const { messages } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0)
+    return res.status(400).json({ error: 'messages array is required.' });
+
+  const userId = req.session.userId;
+  const user   = db.getUserById(userId);
+  const stats  = computeStats(userId);
+  const banks  = db.getBanksByUser(userId);
+
+  try {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model:       'llama-3.1-8b-instant',
+        max_tokens:  400,
+        temperature: 0.75,
+        messages: [
+          { role: 'system', content: buildSystemPrompt(user, stats, banks) },
+          ...messages.slice(-12),
+        ],
+      }),
+    });
+
+    if (!groqRes.ok) {
+      const err = await groqRes.json().catch(() => ({}));
+      console.error('Groq error:', err);
+      return res.status(502).json({ error: 'Marcus is unavailable right now. Try again in a moment.' });
+    }
+
+    const data  = await groqRes.json();
+    const reply = data.choices?.[0]?.message?.content?.trim();
+    if (!reply) return res.status(502).json({ error: 'Got an empty reply. Try again.' });
+
+    res.json({ reply });
+  } catch (err) {
+    console.error('Advisor fetch error:', err);
+    res.status(502).json({ error: 'Marcus is unavailable right now. Try again in a moment.' });
+  }
+});
+
+// ── 404 ───────────────────────────────────────────────────────
+app.use((_req, res) =>
+  res.status(404).send('<h1>404 — Page not found</h1><a href="/">← Home</a>'));
+
+// ── Start ─────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`\n🐷  PiggyBank server running at http://localhost:${PORT}`);
+  console.log(`    DB         → ${require('./db').constructor?.name || 'SQLite'} (piggybank.db)`);
+  console.log(`    Landing    → http://localhost:${PORT}/`);
+  console.log(`    Sign Up    → http://localhost:${PORT}/signup`);
+  console.log(`    Dashboard  → http://localhost:${PORT}/dashboard  (auth required)\n`);
+});
+
+module.exports = app;
+
 const app  = express();
 const PORT = process.env.PORT || 3000;

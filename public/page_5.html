@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#07080f; --card:#131720;
+      --border:rgba(255,255,255,0.07); --border-gold:rgba(201,169,110,0.2);
+      --gold:#c9a96e; --gold-dim:rgba(201,169,110,0.08);
+      --text:#f0e9df; --text-muted:rgba(240,233,223,0.45); --error:#f87171;
+    }
+    html, body { min-height:100%; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+
+    .bg-mesh {
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(ellipse 60% 50% at 30% 30%, rgba(201,169,110,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 70% 70%, rgba(16,185,129,0.04) 0%, transparent 55%);
+    }
+    .grain {
+      position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.02;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px;
+    }
+    .page {
+      position:relative; z-index:2; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:2.5rem 1.25rem;
+    }
+
+    /* Logo */
+    .logo { display:flex; align-items:center; gap:.6rem; margin-bottom:2rem; }
+    .logo-icon {
+      width:34px; height:34px; border-radius:8px;
+      background:var(--gold-dim); border:1px solid var(--border-gold);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .logo-icon i { color:var(--gold); font-size:.85rem; }
+    .logo-name { font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:400; letter-spacing:.1em; }
+
+    /* Card */
+    .card {
+      width:100%; max-width:400px;
+      background:var(--card); border:1px solid var(--border); border-radius:16px;
+      padding:2rem;
+    }
+    .card-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:400; letter-spacing:.02em; margin-bottom:.3rem; }
+    .card-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:1.75rem; line-height:1.5; }
+
+    /* Fields */
+    .field { margin-bottom:1.1rem; }
+    .field-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.45rem; }
+    .field label { font-size:.7rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+    .forgot { font-size:.72rem; color:var(--gold); text-decoration:none; }
+    .forgot:hover { text-decoration:underline; }
+    .input-wrap { position:relative; }
+    .input-wrap .icon { position:absolute; left:.9rem; top:50%; transform:translateY(-50%); color:rgba(240,233,223,0.25); font-size:.78rem; pointer-events:none; }
+    .input-wrap input {
+      width:100%; padding:.8rem .9rem .8rem 2.35rem;
+      background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color:rgba(240,233,223,0.2); }
+    .input-wrap input:focus { border-color:rgba(201,169,110,.4); box-shadow:0 0 0 3px rgba(201,169,110,.08); }
+
+    /* Remember */
+    .remember { display:flex; align-items:center; gap:.6rem; margin-bottom:1.4rem; }
+    .remember input { accent-color:var(--gold); width:15px; height:15px; }
+    .remember label { font-size:.8rem; color:var(--text-muted); cursor:pointer; }
+
+    /* Submit */
+    .btn-submit {
+      width:100%; padding:.9rem;
+      background:linear-gradient(135deg,#c9a96e,#a8844a);
+      color:#07080f; font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      border:none; border-radius:8px; cursor:pointer;
+      box-shadow:0 6px 24px rgba(201,169,110,.2);
+      transition:opacity .2s, transform .15s;
+      display:flex; align-items:center; justify-content:center; gap:.6rem;
+    }
+    .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
+    /* Or divider */
+    .or-divider { position:relative; text-align:center; margin:1.4rem 0; }
+    .or-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:var(--border); }
+    .or-divider span { position:relative; background:var(--card); padding:0 1rem; font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+
+    /* Social */
+    .social-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+    .btn-social {
+      display:flex; align-items:center; justify-content:center; gap:.55rem;
+      padding:.72rem; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500;
+      cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .btn-social:hover { border-color:var(--border-gold); background:var(--gold-dim); }
+
+    /* Footer note */
+    .footer-note { margin-top:1.4rem; text-align:center; font-size:.8rem; color:var(--text-muted); }
+    .footer-note a { color:var(--gold); text-decoration:none; font-weight:600; }
+    .footer-note a:hover { text-decoration:underline; }
+
+    /* Error */
+    .form-error { color:var(--error); font-size:.8rem; text-align:center; margin-bottom:.7rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="grain"></div>
+  <div class="page">
+
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-piggy-bank"></i></div>
+      <span class="logo-name">Vault</span>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Welcome back</h2>
+      <p class="card-sub">Sign in to access your private savings vault.</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="icon far fa-envelope"></i>
+            <input type="email" required placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-header">
+            <label>Password</label>
+            <a href="#" class="forgot">Forgot?</a>
+          </div>
+          <div class="input-wrap">
+            <i class="icon fas fa-key"></i>
+            <input type="password" required placeholder="••••••••">
+          </div>
+        </div>
+
+        <div class="remember">
+          <input type="checkbox" id="remember">
+          <label for="remember">Stay signed in for 30 days</label>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Sign In <i class="fas fa-sign-in-alt" style="font-size:.75rem;"></i>
+        </button>
+      </form>
+
+      <div class="or-divider"><span>or continue with</span></div>
+
+      <div class="social-grid">
+        <button class="btn-social">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" style="width:15px;height:15px;" alt="Google">
+          Google
+        </button>
+        <button class="btn-social">
+          <i class="fab fa-apple"></i> Apple
+        </button>
+      </div>
+    </div>
+
+    <p class="footer-note">New to Vault? <a href="/signup">Create an account</a></p>
+
+  </div>
+  
+</body>
+</html>

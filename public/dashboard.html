@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* ══ RESET & TOKENS ══════════════════════════════════════ */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:        #07080f;
+      --surface:   #0e1118;
+      --card:      #111520;
+      --card-2:    #161c28;
+      --border:    rgba(255,255,255,0.07);
+      --border-md: rgba(255,255,255,0.12);
+      --gold:      #c9a96e;
+      --gold-lt:   #e8c88e;
+      --gold-dim:  rgba(201,169,110,0.1);
+      --gold-bd:   rgba(201,169,110,0.25);
+      --text:      #f0e9df;
+      --text-2:    rgba(240,233,223,0.55);
+      --text-3:    rgba(240,233,223,0.28);
+      --emerald:   #10b981;
+      --amber:     #f59e0b;
+      --error:     #f87171;
+    }
+    html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:400;-webkit-font-smoothing:antialiased;}
+
+    /* ══ BACKGROUND ══════════════════════════════════════════ */
+    .bg-mesh{position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 0%,rgba(201,169,110,0.05) 0%,transparent 55%),
+        radial-gradient(ellipse 60% 60% at 90% 100%,rgba(16,185,129,0.04) 0%,transparent 55%);}
+    .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.018;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px;}
+
+    /* ══ LAYOUT ══════════════════════════════════════════════ */
+    .app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;}
+    .content{flex:1;max-width:680px;width:100%;margin:0 auto;padding:1.25rem 1rem 6.5rem;}
+
+    /* ══ TOP NAV ═════════════════════════════════════════════ */
+    .top-nav{
+      position:sticky;top:0;z-index:30;
+      background:rgba(7,8,15,0.85);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+    .top-nav-inner{max-width:680px;margin:0 auto;padding:0 1rem;height:54px;display:flex;align-items:center;justify-content:space-between;}
+    .nav-brand{display:flex;align-items:center;gap:.6rem;}
+    .nav-brand-icon{width:30px;height:30px;border-radius:7px;background:var(--gold-dim);border:1px solid var(--gold-bd);display:flex;align-items:center;justify-content:center;}
+    .nav-brand-icon i{color:var(--gold);font-size:.8rem;}
+    .nav-brand-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;letter-spacing:.1em;color:var(--text);}
+    .streak-pill{display:none;align-items:center;gap:.4rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);padding:3px 10px;border-radius:99px;}
+    .streak-pill.show{display:flex;}
+    .streak-pill span{font-size:.75rem;font-weight:600;color:var(--amber);}
+    #welcomeText{font-size:.78rem;color:var(--text-2);}
+
+    /* ══ TAB SECTIONS ════════════════════════════════════════ */
+    .tab-section{display:none;}
+    .tab-section.active{display:block;animation:tabIn .3s ease-out;}
+    @keyframes tabIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+    /* ══ SECTION HEADERS ═════════════════════════════════════ */
+    .section-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;letter-spacing:.02em;margin-bottom:.2rem;}
+    .section-sub{font-size:.75rem;color:var(--text-2);}
+
+    /* ══ STAT GRID ═══════════════════════════════════════════ */
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.75rem;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.2rem;}
+    .stat-card.accent{background:linear-gradient(135deg,rgba(201,169,110,0.12),rgba(201,169,110,0.05));border-color:var(--gold-bd);}
+    .stat-card.emerald{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);}
+    .stat-label{font-size:.65rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);margin-bottom:.35rem;}
+    .stat-value{font-size:1.5rem;font-weight:700;color:var(--text);line-height:1;}
+    .stat-value.gold{color:var(--gold);}
+    .stat-value.emerald{color:var(--emerald);}
+    .stat-value.amber{color:var(--amber);}
+
+    /* ══ SECTION ROW ═════════════════════════════════════════ */
+    .section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;}
+    .section-row h3{font-size:.85rem;font-weight:600;letter-spacing:.04em;color:var(--text);}
+    .see-all{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:none;border:none;cursor:pointer;transition:opacity .2s;}
+    .see-all:hover{opacity:.7;}
+
+    /* ══ BANK ROW (dashboard) ════════════════════════════════ */
+    .bank-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:.65rem;transition:border-color .2s;}
+    .bank-row:hover{border-color:var(--gold-bd);}
+    .bank-row-icon{width:38px;height:38px;border-radius:9px;background:var(--gold-dim);border:1px solid rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .bank-row-icon i{color:var(--gold);font-size:.95rem;}
+    .bank-row-name{font-size:.85rem;font-weight:600;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+    .bank-row-amount{font-size:.85rem;font-weight:700;color:var(--gold);flex-shrink:0;margin-left:.75rem;}
+    .v-progress-track{background:rgba(255,255,255,0.07);border-radius:99px;height:4px;margin-top:5px;}
+    .v-progress-fill{background:linear-gradient(90deg,var(--gold),var(--gold-lt));border-radius:99px;height:4px;transition:width .8s cubic-bezier(.25,.8,.25,1);}
+    .v-progress-fill.done{background:linear-gradient(90deg,var(--emerald),#34d399);}
+
+    /* ══ BADGE MINI ══════════════════════════════════════════ */
+    .badge-mini{background:var(--gold-dim);border:1px solid var(--gold-bd);border-radius:12px;padding:10px 14px;text-align:center;min-width:72px;position:relative;overflow:hidden;}
+    .badge-mini::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.08) 50%,transparent 70%);animation:shine 3s infinite;}
+    @keyframes shine{0%,100%{transform:translateX(-100%);}50%{transform:translateX(100%);}}
+    .badge-mini-emoji{font-size:1.4rem;margin-bottom:3px;}
+    .badge-mini-label{font-size:.65rem;font-weight:600;color:var(--gold);}
+
+    /* ══ BANK CARDS (banks tab) ══════════════════════════════ */
+    .bank-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:.9rem;transition:border-color .2s,transform .2s;}
+    .bank-card:hover{border-color:var(--gold-bd);transform:translateY(-2px);}
+    .bank-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.8rem;}
+    .bank-card-icon{width:40px;height:40px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(201,169,110,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .bank-card-icon i{color:var(--gold);}
+    .bank-card-name{font-size:.9rem;font-weight:600;color:var(--text);line-height:1.3;}
+    .bank-card-goal-txt{font-size:.72rem;color:var(--text-2);margin-top:2px;}
+    .bank-card-del{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px;transition:color .2s;font-size:.8rem;}
+    .bank-card-del:hover{color:var(--error);}
+    .policy-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:.68rem;font-weight:600;letter-spacing:.04em;margin-bottom:.85rem;}
+    .pb-free{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;}
+    .pb-goal{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:#fbbf24;}
+    .pb-cooling{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:#93c5fd;}
+    .pb-goal_and_cooling{background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);color:#fb923c;}
+    .bank-balance{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:500;color:var(--gold-lt);letter-spacing:.01em;margin-bottom:.6rem;}
+    .bank-progress-track{background:rgba(255,255,255,0.07);border-radius:99px;height:5px;margin-bottom:4px;}
+    .bank-progress-pct{font-size:.7rem;color:var(--text-3);margin-bottom:.75rem;}
+    .bank-progress-pct.done{color:var(--emerald);}
+    .lock-banner{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.18);border-radius:9px;padding:8px 12px;margin-bottom:.75rem;}
+    .lock-banner p{font-size:.75rem;color:rgba(251,191,36,0.85);font-weight:500;}
+    .bank-btn-row{display:flex;gap:.6rem;}
+    .v-btn-deposit{flex:1;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;border-radius:9px;padding:9px 0;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+    .v-btn-deposit:hover{background:rgba(16,185,129,0.18);}
+    .v-btn-withdraw{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-2);border-radius:9px;padding:9px 0;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+    .v-btn-withdraw:hover{background:rgba(255,255,255,0.08);}
+    .v-btn-withdraw-locked{flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:var(--text-3);border-radius:9px;padding:9px 0;font-size:.78rem;font-weight:600;cursor:not-allowed;font-family:'DM Sans',sans-serif;}
+    /* Empty state */
+    .empty-state{display:none;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center;}
+    .empty-state.show{display:flex;}
+    .empty-icon{width:72px;height:72px;border-radius:99px;background:var(--gold-dim);border:1px solid var(--gold-bd);display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;}
+    .empty-icon i{color:var(--gold);font-size:1.75rem;}
+
+    /* ══ HABITS ══════════════════════════════════════════════ */
+    .streak-hero{background:linear-gradient(135deg,#8B3A0A,#C2410C,#7C2D12);border-radius:20px;padding:1.75rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,0.08);}
+    .streak-hero-num{font-family:'Cormorant Garamond',serif;font-size:5rem;font-weight:300;line-height:1;color:#fff;}
+    .streak-sub{font-size:.72rem;color:rgba(255,255,255,0.55);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;}
+    .streak-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;text-align:center;}
+    .streak-stat-box{background:rgba(0,0,0,0.2);border-radius:10px;padding:.75rem .5rem;}
+    .streak-stat-val{font-size:1.1rem;font-weight:700;color:#fff;}
+    .streak-stat-lbl{font-size:.65rem;color:rgba(255,255,255,0.45);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
+    .v-card-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:.9rem;}
+    .v-card-section h3{font-size:.82rem;font-weight:600;letter-spacing:.05em;margin-bottom:.85rem;color:var(--text);}
+    .cal-cell{width:24px;height:24px;border-radius:5px;}
+    .cal-active{background:var(--emerald);opacity:.8;}
+    .cal-inactive{background:rgba(255,255,255,0.06);}
+    .cal-legend{display:flex;align-items:center;gap:1.25rem;margin-top:.75rem;}
+    .cal-legend-item{display:flex;align-items:center;gap:.5rem;font-size:.72rem;color:var(--text-2);}
+    .tip-card{background:rgba(201,169,110,0.05);border:1px solid var(--gold-bd);border-radius:14px;padding:1rem 1.25rem;}
+    .tip-label{font-size:.65rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem;}
+    #habitTip{font-size:.85rem;color:var(--text-2);line-height:1.65;}
+    /* Milestones */
+    .milestone-row{display:flex;align-items:center;gap:.85rem;margin-bottom:.75rem;}
+    .milestone-emoji{font-size:1.3rem;width:32px;text-align:center;flex-shrink:0;}
+    .milestone-label{font-size:.82rem;font-weight:600;color:var(--text);}
+    .milestone-label.locked{color:var(--text-3);}
+    .milestone-check{font-size:.72rem;font-weight:600;color:var(--emerald);}
+    .milestone-check.locked{color:var(--text-3);}
+
+    /* ══ PROFILE ═════════════════════════════════════════════ */
+    .profile-hero{background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.06));border:1px solid var(--gold-bd);border-radius:20px;padding:1.75rem;margin-bottom:1rem;}
+    .profile-avatar{width:60px;height:60px;border-radius:14px;background:var(--gold-dim);border:1px solid var(--gold-bd);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:500;color:var(--gold);flex-shrink:0;}
+    .profile-name{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400;color:var(--text);margin-bottom:.15rem;}
+    .profile-email{font-size:.78rem;color:var(--text-2);}
+    .profile-since{font-size:.7rem;color:var(--text-3);margin-top:2px;letter-spacing:.05em;}
+    .profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:1.25rem;}
+    .profile-stat{background:rgba(0,0,0,0.2);border-radius:10px;padding:.75rem;text-align:center;}
+    .profile-stat-val{font-size:1.1rem;font-weight:700;color:var(--text);}
+    .profile-stat-lbl{font-size:.65rem;color:rgba(240,233,223,0.4);letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
+    .badge-progress-pill{font-size:.72rem;color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-bd);padding:3px 10px;border-radius:99px;font-weight:600;}
+    .badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;}
+    .v-badge{border-radius:14px;padding:.85rem .65rem;text-align:center;border:1px solid var(--border);}
+    .v-badge.earned{background:var(--gold-dim);border-color:var(--gold-bd);position:relative;overflow:hidden;}
+    .v-badge.earned::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);animation:shine 3.5s infinite;}
+    .v-badge.locked{background:rgba(255,255,255,0.02);opacity:.4;}
+    .v-badge-emoji{font-size:1.5rem;margin-bottom:.35rem;}
+    .v-badge-title{font-size:.7rem;font-weight:600;color:var(--text);line-height:1.3;}
+    .v-badge-desc{font-size:.62rem;color:var(--text-2);line-height:1.4;margin-top:2px;}
+    .v-badge-status{font-size:.65rem;font-weight:700;margin-top:.35rem;}
+    .v-badge-status.earned-s{color:var(--gold);}
+    .v-badge-status.locked-s{color:var(--text-3);}
+    .logout-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--error);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;transition:background .2s,border-color .2s;}
+    .logout-btn:hover{background:rgba(248,113,113,0.06);border-color:rgba(248,113,113,0.2);}
+
+    /* ══ BOTTOM NAV ══════════════════════════════════════════ */
+    .bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;z-index:40;
+      background:rgba(11,13,20,0.92);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-top:1px solid var(--border);
+      padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+    .bottom-nav-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-around;height:60px;padding:0 .5rem;}
+    .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:none;border:none;cursor:pointer;gap:3px;transition:opacity .2s;}
+    .nav-tab-icon{font-size:1.1rem;color:var(--text-3);transition:color .2s;}
+    .nav-tab-label{font-size:.6rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);transition:color .2s;}
+    .nav-tab.active .nav-tab-icon,.nav-tab.active .nav-tab-label{color:var(--gold);}
+    .fab-wrap{flex:1;display:flex;align-items:center;justify-content:center;}
+    .fab{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--gold),#a8844a);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:-20px;box-shadow:0 8px 24px rgba(201,169,110,0.35);transition:transform .15s,box-shadow .2s;animation:fabPulse 3s infinite;}
+    .fab i{color:#07080f;font-size:1.1rem;}
+    .fab:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(201,169,110,0.45);}
+    .fab:active{transform:scale(.92);}
+    @keyframes fabPulse{0%,100%{box-shadow:0 8px 24px rgba(201,169,110,0.35);}50%{box-shadow:0 8px 32px rgba(201,169,110,0.55),0 0 0 8px rgba(201,169,110,0.06);}}
+
+    /* ══ DIALOGS ═════════════════════════════════════════════ */
+    dialog{background:var(--card);border:1px solid var(--border-md);border-radius:20px;padding:1.75rem;width:calc(100% - 2rem);max-width:420px;color:var(--text);font-family:'DM Sans',sans-serif;overflow-y:auto;max-height:90svh;
+      /* Native dialog centering — works reliably cross-browser */
+      position:fixed;inset:0;margin:auto;
+    }
+    dialog::backdrop{background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);}
+    .dialog-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:400;margin-bottom:1.25rem;}
+    .dlg-label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);margin-bottom:.5rem;}
+    .dlg-input{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:1rem;}
+    .dlg-input::placeholder{color:var(--text-3);}
+    .dlg-input:focus{border-color:var(--gold-bd);box-shadow:0 0 0 3px var(--gold-dim);}
+    .dlg-select{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-bottom:1rem;cursor:pointer;}
+    .dlg-select:focus{border-color:var(--gold-bd);}
+    .dlg-select option{background:#131720;}
+    .section-label{font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--text-2);margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem;}
+    /* Icon picker */
+    .icon-picker{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;}
+    .icon-btn{width:42px;height:42px;border-radius:9px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:border-color .2s,background .2s;color:var(--gold);}
+    .icon-btn.selected{border-color:var(--gold-bd);background:var(--gold-dim);}
+    .icon-btn:hover:not(.selected){border-color:rgba(201,169,110,0.3);}
+    /* Policy options */
+    .policy-opts{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;}
+    .policy-opt{display:flex;align-items:flex-start;gap:.85rem;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s,background .2s;}
+    .policy-opt.active-policy{border-color:var(--gold-bd);background:var(--gold-dim);}
+    .policy-opt input{accent-color:var(--gold);margin-top:3px;flex-shrink:0;}
+    .policy-opt-title{font-size:.82rem;font-weight:600;color:var(--text);}
+    .policy-opt-desc{font-size:.75rem;color:var(--text-2);margin-top:2px;line-height:1.4;}
+    /* Dialog buttons */
+    .dlg-btn-row{display:flex;gap:.65rem;margin-top:.25rem;}
+    .dlg-btn-cancel{flex:1;padding:.85rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text-2);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:background .2s;}
+    .dlg-btn-cancel:hover{background:rgba(255,255,255,0.08);}
+    .dlg-btn-confirm{flex:1;padding:.85rem;background:linear-gradient(135deg,var(--gold),#a8844a);border:none;border-radius:10px;color:#07080f;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:opacity .2s;}
+    .dlg-btn-confirm:hover{opacity:.9;}
+    .dlg-btn-confirm:disabled{opacity:.45;cursor:not-allowed;}
+    .dlg-err{font-size:.78rem;color:var(--error);margin-bottom:.65rem;display:none;}
+    .dlg-err.show{display:block;}
+    /* TX dialog title */
+    .tx-subtitle{font-size:.8rem;color:var(--text-2);margin-bottom:1.25rem;margin-top:-.5rem;}
+
+    /* ══ MARCUS BUTTON ═══════════════════════════════════════ */
+    .marcus-btn{
+      position:fixed;bottom:75px;right:1rem;z-index:50;
+      width:52px;height:52px;border-radius:14px;
+      background:linear-gradient(135deg,#0e1525,#1a2540);
+      border:1px solid rgba(201,169,110,0.25);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:600;
+      color:var(--gold);
+      box-shadow:0 6px 20px rgba(0,0,0,0.4);
+      transition:transform .15s,box-shadow .2s;
+    }
+    .marcus-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,0.5);}
+    .marcus-online{position:absolute;top:4px;right:4px;width:10px;height:10px;background:var(--emerald);border-radius:99px;border:2px solid var(--bg);}
+
+    /* ══ CHAT OVERLAY ════════════════════════════════════════ */
+    #chatOverlay{
+      position:fixed;inset:0;z-index:60;
+      flex-direction:column;
+      background:#0d1117;
+    }
+    .chat-header{
+      display:flex;align-items:center;gap:.85rem;padding:.9rem 1rem;
+      border-bottom:1px solid var(--border);
+      background:rgba(11,13,20,0.95);
+      backdrop-filter:blur(12px);
+      flex-shrink:0;
+    }
+    .chat-back{background:none;border:none;cursor:pointer;color:var(--text-2);font-size:1rem;padding:4px;transition:color .2s;}
+    .chat-back:hover{color:var(--text);}
+    .chat-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(201,169,110,0.2),rgba(201,169,110,0.08));border:1px solid var(--gold-bd);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--gold);position:relative;flex-shrink:0;}
+    .chat-online-dot{position:absolute;bottom:0;right:0;width:10px;height:10px;background:var(--emerald);border-radius:99px;border:2px solid #0d1117;}
+    .chat-header-name{font-size:.9rem;font-weight:600;color:var(--text);}
+    .chat-header-status{font-size:.72rem;color:var(--emerald);}
+    .chat-clear{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:6px;transition:color .2s,background .2s;margin-left:auto;}
+    .chat-clear:hover{color:var(--text-2);background:rgba(255,255,255,0.05);}
+    .chat-date{text-align:center;padding:.75rem 0 .25rem;font-size:.7rem;color:var(--text-3);letter-spacing:.08em;}
+    .chat-messages{flex:1;overflow-y:auto;padding:.5rem 1rem;scroll-behavior:smooth;}
+    .chat-bubble-wrap{display:flex;margin-bottom:.6rem;}
+    .chat-bubble-wrap.user{justify-content:flex-end;}
+    .chat-bubble-wrap.marcus{justify-content:flex-start;}
+    .chat-bubble{max-width:78%;padding:.7rem 1rem;font-size:.85rem;line-height:1.55;}
+    .chat-bubble.user{background:linear-gradient(135deg,var(--gold),#a8844a);color:#07080f;border-radius:16px 16px 3px 16px;font-weight:500;}
+    .chat-bubble.marcus{background:#161e2e;color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 3px;}
+    .bubble-meta{font-size:.65rem;color:var(--text-3);margin-top:3px;display:flex;align-items:center;gap:4px;}
+    .bubble-meta.user{justify-content:flex-end;}
+    .typing-wrap{padding:.5rem 1rem .25rem;flex-shrink:0;}
+    .typing-indicator{display:inline-flex;align-items:center;gap:4px;padding:.6rem .9rem;background:#161e2e;border:1px solid var(--border);border-radius:14px 14px 14px 3px;}
+    .typing-dot{width:6px;height:6px;border-radius:99px;background:var(--text-3);animation:tdot 1.2s ease-in-out infinite;}
+    @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-5px);opacity:1;}}
+    .chat-input-bar{display:flex;align-items:flex-end;gap:.6rem;padding:.6rem .75rem;border-top:1px solid var(--border);background:rgba(11,13,20,0.95);flex-shrink:0;padding-bottom:max(.6rem, env(safe-area-inset-bottom));}
+    .chat-input-wrap{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;padding:.55rem .85rem;display:flex;align-items:flex-end;}
+    .chat-input-wrap textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;line-height:1.5;resize:none;max-height:100px;}
+    .chat-input-wrap textarea::placeholder{color:var(--text-3);}
+    .chat-send{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--gold),#a8844a);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;}
+    .chat-send i{color:#07080f;font-size:.85rem;}
+    .chat-send:hover{opacity:.9;}
+    .chip-row{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;padding:.75rem .5rem 1rem;}
+    .chip-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-2);border-radius:99px;padding:5px 12px;font-size:.75rem;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;}
+    .chip-btn:hover{border-color:var(--gold-bd);color:var(--gold);background:var(--gold-dim);}
+
+    /* ══ CELEBRATION MODAL ═══════════════════════════════════ */
+    #celebrationModal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+    #celebrationModal.show{display:flex;}
+    #celebrationModal::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);}
+    #celebrationCard{
+      position:relative;z-index:1;
+      background:var(--card);border:1px solid var(--gold-bd);border-radius:24px;padding:2.5rem 2rem;max-width:320px;width:100%;text-align:center;
+      transform:scale(0);
+    }
+    #celebrationModal.show #celebrationCard{animation:celebPop .55s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+    @keyframes celebPop{0%{transform:scale(0) rotate(-4deg);opacity:0;}65%{transform:scale(1.05) rotate(1deg);}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+    .celeb-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text);margin-bottom:.25rem;}
+    .celeb-bank{font-size:.95rem;color:var(--gold);font-weight:600;margin-bottom:.35rem;}
+    .celeb-amount{font-size:.82rem;color:var(--text-2);margin-bottom:1.75rem;}
+    .celeb-btn{width:100%;padding:.9rem;background:linear-gradient(135deg,var(--gold),#a8844a);border:none;border-radius:12px;color:#07080f;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:opacity .2s;}
+    .celeb-btn:hover{opacity:.9;}
+
+    /* ══ FLAME ANIMATION ═════════════════════════════════════ */
+    .flame{display:inline-block;animation:flicker 1.2s ease-in-out infinite;}
+    @keyframes flicker{0%,100%{transform:scaleY(1) rotate(-2deg);}50%{transform:scaleY(1.08) rotate(2deg);}}
+
+    /* ══ ADD BANK BUTTON (in banks tab) ══════════════════════ */
+    .add-bank-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;background:var(--gold-dim);border:1px solid var(--gold-bd);border-radius:8px;color:var(--gold);font-size:.78rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s;}
+    .add-bank-btn:hover{background:rgba(201,169,110,0.15);}
+
+    /* ══ FADE IN ═════════════════════════════════════════════ */
+    .fade-in{animation:fadeIn .4s ease-out forwards;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="grain"></div>
+
+<div class="app">
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <div class="top-nav-inner">
+      <div class="nav-brand">
+        <div class="nav-brand-icon"><i class="fas fa-piggy-bank"></i></div>
+        <span class="nav-brand-name">Vault</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div id="streakBadge" class="streak-pill">
+          <span class="flame">🔥</span>
+          <span id="streakCount">0</span>
+        </div>
+        <span id="welcomeText" class="hidden sm:block"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <div class="content">
+
+    <!-- ── HOME ──────────────────────────────── -->
+    <section id="tab-dashboard" class="tab-section active">
+      <div style="margin-bottom:1.25rem;">
+        <h2 class="section-title">Overview</h2>
+        <p id="dashGreeting" class="section-sub"></p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card accent">
+          <p class="stat-label">Total Saved</p>
+          <p id="dashTotalSaved" class="stat-value gold">$0.00</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Vaults</p>
+          <p id="dashBankCount" class="stat-value">0</p>
+        </div>
+        <div class="stat-card emerald">
+          <p class="stat-label">Goals Reached</p>
+          <p id="dashGoalsMet" class="stat-value emerald">0</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Day Streak</p>
+          <div style="display:flex;align-items:center;gap:.35rem;">
+            <span id="dashStreak" class="stat-value amber">0</span>
+            <span class="flame" style="font-size:1.1rem;">🔥</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <div class="section-row">
+          <h3>Recent Vaults</h3>
+          <button class="see-all" onclick="switchTab('banks')">See all →</button>
+        </div>
+        <div id="dashRecentBanks"></div>
+      </div>
+
+      <div>
+        <div class="section-row">
+          <h3>Earned Badges</h3>
+          <button class="see-all" onclick="switchTab('profile')">See all →</button>
+        </div>
+        <div id="dashRecentBadges" style="display:flex;gap:.65rem;flex-wrap:wrap;"></div>
+      </div>
+    </section>
+
+    <!-- ── BANKS ──────────────────────────────── -->
+    <section id="tab-banks" class="tab-section">
+      <div class="section-row" style="margin-bottom:1.25rem;">
+        <div>
+          <h2 class="section-title">My Vaults</h2>
+        </div>
+        <button class="add-bank-btn" onclick="openCreateDialog()">
+          <i class="fas fa-plus" style="font-size:.72rem;"></i> New Vault
+        </button>
+      </div>
+      <div id="bankGrid"></div>
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon"><i class="fas fa-piggy-bank"></i></div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:.4rem;">No vaults yet</p>
+        <p style="font-size:.82rem;color:var(--text-2);margin-bottom:1.5rem;">Tap <strong style="color:var(--gold);">+</strong> to open your first vault.</p>
+      </div>
+    </section>
+
+    <!-- ── HABITS ─────────────────────────────── -->
+    <section id="tab-habits" class="tab-section">
+      <div style="margin-bottom:1.25rem;">
+        <h2 class="section-title">Savings Habits</h2>
+        <p class="section-sub">Build consistency. Every deposit counts.</p>
+      </div>
+
+      <div class="streak-hero">
+        <p class="streak-sub">Current Streak</p>
+        <div style="display:flex;align-items:flex-end;gap:.85rem;margin-bottom:1.1rem;">
+          <span id="habitCurrentStreak" class="streak-hero-num">0</span>
+          <div style="padding-bottom:.5rem;">
+            <span style="font-size:2.5rem;">🔥</span>
+            <p style="font-size:.72rem;color:rgba(255,255,255,0.5);margin-top:2px;">days in a row</p>
+          </div>
+        </div>
+        <div class="streak-stats-grid">
+          <div class="streak-stat-box">
+            <p class="streak-stat-val" id="habitLongest">0</p>
+            <p class="streak-stat-lbl">Longest</p>
+          </div>
+          <div class="streak-stat-box">
+            <p class="streak-stat-val" id="habitTotalDeps">0</p>
+            <p class="streak-stat-lbl">Deposits</p>
+          </div>
+          <div class="streak-stat-box">
+            <p class="streak-stat-val" id="habitActiveDays">0</p>
+            <p class="streak-stat-lbl">Active days</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="v-card-section">
+        <h3>Last 30 Days</h3>
+        <div id="habitCalendar" style="display:grid;gap:5px;grid-template-columns:repeat(10,1fr);"></div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-cell cal-inactive"></div> No deposit</div>
+          <div class="cal-legend-item"><div class="cal-cell cal-active"></div> Deposited</div>
+        </div>
+      </div>
+
+      <div class="v-card-section">
+        <h3>Streak Milestones</h3>
+        <div id="milestones"></div>
+      </div>
+
+      <div class="tip-card">
+        <p class="tip-label">✦ Saving Insight</p>
+        <p id="habitTip"></p>
+      </div>
+    </section>
+
+    <!-- ── PROFILE ────────────────────────────── -->
+    <section id="tab-profile" class="tab-section">
+      <div class="profile-hero">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.5rem;">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <div style="min-width:0;">
+            <p class="profile-name" id="profileName">—</p>
+            <p class="profile-email" id="profileEmail">—</p>
+            <p class="profile-since" id="profileSince">—</p>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <p class="profile-stat-val" id="profileBanks">0</p>
+            <p class="profile-stat-lbl">Vaults</p>
+          </div>
+          <div class="profile-stat">
+            <p class="profile-stat-val" id="profileGoals">0</p>
+            <p class="profile-stat-lbl">Goals</p>
+          </div>
+          <div class="profile-stat">
+            <p class="profile-stat-val" id="profileStreak">0🔥</p>
+            <p class="profile-stat-lbl">Streak</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <div class="section-row" style="margin-bottom:.85rem;">
+          <h3 style="font-size:.85rem;font-weight:600;color:var(--text);">Badges</h3>
+          <span id="badgeProgress" class="badge-progress-pill"></span>
+        </div>
+        <div id="badgeGrid" class="badge-grid"></div>
+      </div>
+
+      <button class="logout-btn" onclick="logout()">
+        <span><i class="fas fa-sign-out-alt" style="margin-right:.6rem;"></i>Sign out</span>
+        <i class="fas fa-chevron-right" style="font-size:.7rem;opacity:.4;"></i>
+      </button>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- MARCUS BUTTON -->
+<button id="marcusBtn" class="marcus-btn" onclick="openChat()" title="Talk to Marcus">
+  M
+  <span class="marcus-online"></span>
+</button>
+
+<!-- MARCUS CHAT OVERLAY -->
+<div id="chatOverlay" style="display:none;">
+  <div class="chat-header">
+    <button class="chat-back" onclick="closeChat()"><i class="fas fa-arrow-left"></i></button>
+    <div class="chat-avatar">M<span class="chat-online-dot"></span></div>
+    <div>
+      <p class="chat-header-name">Marcus</p>
+      <p id="marcusStatus" class="chat-header-status">online</p>
+    </div>
+    <button class="chat-clear" onclick="clearChat()">Clear</button>
+  </div>
+  <div class="chat-date" id="chatDateChip"></div>
+  <div id="chatMessages" class="chat-messages"></div>
+  <div id="typingIndicator" class="typing-wrap" style="display:none;">
+    <div class="typing-indicator">
+      <span class="typing-dot"></span>
+      <span class="typing-dot" style="animation-delay:.2s"></span>
+      <span class="typing-dot" style="animation-delay:.4s"></span>
+    </div>
+  </div>
+  <div class="chat-input-bar">
+    <div class="chat-input-wrap">
+      <textarea id="chatInput" placeholder="Message Marcus…" rows="1"
+        onkeydown="handleChatKey(event)" oninput="autoGrowInput(this)"></textarea>
+    </div>
+    <button class="chat-send" onclick="sendMessage()">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="nav-tab active" onclick="switchTab('dashboard')" id="navDashboard">
+      <i class="nav-tab-icon fas fa-home"></i>
+      <span class="nav-tab-label">Home</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('banks')" id="navBanks">
+      <i class="nav-tab-icon fas fa-piggy-bank"></i>
+      <span class="nav-tab-label">Vaults</span>
+    </button>
+    <div class="fab-wrap">
+      <button class="fab" onclick="openCreateDialog()"><i class="fas fa-plus"></i></button>
+    </div>
+    <button class="nav-tab" onclick="switchTab('habits')" id="navHabits">
+      <i class="nav-tab-icon fas fa-fire"></i>
+      <span class="nav-tab-label">Habits</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('profile')" id="navProfile">
+      <i class="nav-tab-icon fas fa-user"></i>
+      <span class="nav-tab-label">Profile</span>
+    </button>
+  </div>
+</nav>
+
+<!-- CREATE DIALOG -->
+<dialog id="createDialog">
+  <p class="dialog-title">New Vault</p>
+  <label class="dlg-label">Name *</label>
+  <input id="newBankName" class="dlg-input" type="text" placeholder="e.g. Dream Holiday">
+  <label class="dlg-label">Goal Amount ($)</label>
+  <input id="newBankGoal" class="dlg-input" type="number" min="0" step="0.01" placeholder="e.g. 2000.00">
+  <p class="section-label"><i class="fas fa-shapes" style="color:var(--gold);font-size:.75rem;"></i> Icon</p>
+  <div id="iconPicker" class="icon-picker"></div>
+  <p class="section-label"><i class="fas fa-shield-alt" style="color:var(--gold);font-size:.75rem;"></i> Withdrawal Policy</p>
+  <div class="policy-opts">
+    <label class="policy-opt active-policy">
+      <input type="radio" name="withdrawalPolicy" value="free" checked>
+      <div><p class="policy-opt-title">Free withdrawals</p><p class="policy-opt-desc">Withdraw anytime, no restrictions.</p></div>
+    </label>
+    <label class="policy-opt">
+      <input type="radio" name="withdrawalPolicy" value="goal_only">
+      <div><p class="policy-opt-title">Goal must be reached</p><p class="policy-opt-desc">Locked until your savings target is hit.</p></div>
+    </label>
+    <label class="policy-opt">
+      <input type="radio" name="withdrawalPolicy" value="cooling">
+      <div><p class="policy-opt-title">Cooling period</p><p class="policy-opt-desc">Locked for a set number of days.</p></div>
+    </label>
+    <label class="policy-opt">
+      <input type="radio" name="withdrawalPolicy" value="goal_and_cooling">
+      <div><p class="policy-opt-title">Goal + Cooling</p><p class="policy-opt-desc">Both conditions must be satisfied.</p></div>
+    </label>
+  </div>
+  <div id="coolingDaysRow" style="display:none;">
+    <label class="dlg-label">Cooling Period</label>
+    <select id="coolingDays" class="dlg-select">
+      <option value="7">7 days</option>
+      <option value="14">14 days</option>
+      <option value="30" selected>30 days</option>
+      <option value="60">60 days</option>
+      <option value="90">90 days</option>
+      <option value="180">6 months</option>
+      <option value="365">1 year</option>
+    </select>
+  </div>
+  <p id="createError" class="dlg-err"></p>
+  <div class="dlg-btn-row">
+    <button class="dlg-btn-cancel" onclick="closeCreateDialog()">Cancel</button>
+    <button class="dlg-btn-confirm" onclick="createBank()">Create Vault</button>
+  </div>
+</dialog>
+
+<!-- TRANSACTION DIALOG -->
+<dialog id="txDialog">
+  <p id="txTitle" class="dialog-title"></p>
+  <p id="txSubtitle" class="tx-subtitle"></p>
+  <label class="dlg-label">Amount ($)</label>
+  <input id="txAmount" class="dlg-input" type="number" min="0.01" step="0.01" placeholder="0.00">
+  <p id="txError" class="dlg-err"></p>
+  <div class="dlg-btn-row">
+    <button class="dlg-btn-cancel" onclick="document.getElementById('txDialog').close()">Cancel</button>
+    <button id="txConfirmBtn" class="dlg-btn-confirm" onclick="confirmTransaction()">Confirm</button>
+  </div>
+</dialog>
+
+<!-- DELETE CONFIRM DIALOG -->
+<dialog id="deleteDialog">
+  <p class="dialog-title" style="font-size:1.3rem;">Delete Vault?</p>
+  <p id="deleteDialogMsg" style="font-size:.85rem;color:var(--text-2);margin-bottom:1.5rem;line-height:1.6;"></p>
+  <div class="dlg-btn-row">
+    <button class="dlg-btn-cancel" onclick="document.getElementById('deleteDialog').close()">Cancel</button>
+    <button id="deleteConfirmBtn" class="dlg-btn-confirm"
+      style="background:linear-gradient(135deg,#ef4444,#b91c1c);">
+      Delete
+    </button>
+  </div>
+</dialog>
+
+<!-- CELEBRATION MODAL -->
+<div id="celebrationModal">
+  <div id="celebrationCard">
+    <div id="celebrationEmoji" style="font-size:3.5rem;margin-bottom:.75rem;">🎉</div>
+    <h2 class="celeb-title">Goal Reached</h2>
+    <p id="celebrationBankName" class="celeb-bank"></p>
+    <p id="celebrationAmount" class="celeb-amount"></p>
+    <button class="celeb-btn" onclick="closeCelebration()">✦ Keep Going</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── CONSTANTS ───────────────────────────────────────────── */
+const ICONS = ['fa-piggy-bank','fa-plane','fa-car','fa-laptop','fa-home','fa-graduation-cap','fa-heart','fa-gift'];
+
+const POLICY_META = {
+  free:             { cls:'pb-free',            icon:'fa-unlock',    text:'Free' },
+  goal_only:        { cls:'pb-goal',             icon:'fa-bullseye',  text:'Goal' },
+  cooling:          { cls:'pb-cooling',          icon:'fa-clock',     text:'Cooling' },
+  goal_and_cooling: { cls:'pb-goal_and_cooling', icon:'fa-shield-alt',text:'Goal+Cool' },
+};
+
+const STREAK_MILESTONES = [
+  { days:3,  icon:'🔥', label:'3-Day Spark' },
+  { days:7,  icon:'⚡', label:'Week Warrior' },
+  { days:14, icon:'🌟', label:'Streak Master' },
+  { days:30, icon:'🏆', label:'Month Master' },
+  { days:90, icon:'💎', label:'Diamond Saver' },
+];
+
+const TIPS = [
+  "Saving even $1 a day adds up to $365 a year — start small.",
+  "Automate a transfer on payday. Pay your future self first.",
+  "Avoid lifestyle inflation: when income rises, save the difference.",
+  "The best time to start was yesterday. The second best is today.",
+  "Name your vault after the dream — it keeps you motivated.",
+  "Celebrate small milestones. Progress, not perfection.",
+  "Skipping one takeaway a week can add hundreds to your savings.",
+  "Consistency beats intensity — every deposit builds the habit.",
+];
+
+/* ── STATE ───────────────────────────────────────────────── */
+let selectedIcon    = 'fa-piggy-bank';
+let selectedPolicy  = 'free';
+let currentTxBankId = null;
+let currentTxType   = null;
+let currentTab      = 'dashboard';
+let txSnapshot      = null;
+
+const api = (url) => fetch(url, { cache:'no-store' });
+
+/* ── INIT ────────────────────────────────────────────────── */
+async function init() {
+  try {
+    const res = await api('/api/me');
+    if (!res.ok) { window.location.href='/login'; return; }
+    applyUser(await res.json());
+  } catch { window.location.href='/login'; return; }
+  buildIconPicker();
+  setupPolicyListeners();
+  document.getElementById('habitTip').textContent = TIPS[new Date().getDate() % TIPS.length];
+  await refreshAll();
+}
+
+function applyUser(user) {
+  const first = user.name.split(' ')[0];
+  document.getElementById('welcomeText').textContent = `Hi, ${first}`;
+  document.getElementById('profileName').textContent  = user.name;
+  document.getElementById('profileEmail').textContent = user.email;
+  document.getElementById('profileSince').textContent =
+    'Member since ' + new Date(user.createdAt).toLocaleDateString('en',{month:'long',year:'numeric'});
+  document.getElementById('profileAvatar').textContent = first[0].toUpperCase();
+  const h = new Date().getHours();
+  const g = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('dashGreeting').textContent = `${g}, ${first}.`;
+}
+
+/* ── TABS ────────────────────────────────────────────────── */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  const map={dashboard:'navDashboard',banks:'navBanks',habits:'navHabits',profile:'navProfile'};
+  if (map[tab]) document.getElementById(map[tab]).classList.add('active');
+  if (tab==='dashboard') refreshDashboard();
+  if (tab==='banks')     loadBanks();
+  if (tab==='habits')    loadHabits();
+  if (tab==='profile')   loadProfile();
+}
+
+async function refreshAll() {
+  await Promise.all([refreshDashboard(),loadBanks(),loadHabits(),loadProfile()]);
+}
+
+/* ── DASHBOARD ───────────────────────────────────────────── */
+async function refreshDashboard() {
+  const [sR,bR,badR] = await Promise.all([api('/api/stats'),api('/api/piggybanks'),api('/api/badges')]);
+  const stats  = await sR.json();
+  const banks  = await bR.json();
+  const badges = await badR.json();
+
+  document.getElementById('dashTotalSaved').textContent = `$${stats.totalSaved.toFixed(2)}`;
+  document.getElementById('dashBankCount').textContent  = stats.bankCount;
+  document.getElementById('dashGoalsMet').textContent   = stats.goalsMet;
+  document.getElementById('dashStreak').textContent     = stats.currentStreak;
+
+  if (stats.currentStreak >= 2) {
+    document.getElementById('streakBadge').classList.add('show');
+    document.getElementById('streakCount').textContent = stats.currentStreak;
+  }
+
+  // Recent banks
+  const rc = document.getElementById('dashRecentBanks');
+  rc.innerHTML='';
+  if (!banks.length) {
+    rc.innerHTML=`<p style="font-size:.82rem;color:var(--text-2);">No vaults yet. <button onclick="openCreateDialog()" style="color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;">Create one →</button></p>`;
+  } else {
+    banks.slice(0,3).forEach(b => {
+      const pct = b.goal>0 ? Math.min(100,(b.balance/b.goal)*100) : 0;
+      const el  = document.createElement('div');
+      el.className = 'bank-row fade-in';
+      el.innerHTML = `
+        <div class="bank-row-icon"><i class="fas ${b.icon}"></i></div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <p class="bank-row-name">${escHtml(b.name)}</p>
+            <p class="bank-row-amount">$${b.balance.toFixed(2)}</p>
+          </div>
+          ${b.goal>0?`<div class="v-progress-track"><div class="v-progress-fill${b.balance>=b.goal?' done':''}" style="width:${pct}%;"></div></div>`:''}
+        </div>`;
+      rc.appendChild(el);
+    });
+  }
+
+  // Recent badges
+  const bc = document.getElementById('dashRecentBadges');
+  bc.innerHTML='';
+  const earned = badges.filter(b=>b.earned).slice(0,4);
+  if (!earned.length) {
+    bc.innerHTML=`<p style="font-size:.82rem;color:var(--text-2);">Start saving to earn badges.</p>`;
+  } else {
+    earned.forEach(b => {
+      const el = document.createElement('div');
+      el.className='badge-mini';
+      el.innerHTML=`<div class="badge-mini-emoji">${b.icon}</div><p class="badge-mini-label">${b.title}</p>`;
+      bc.appendChild(el);
+    });
+  }
+}
+
+/* ── BANKS ───────────────────────────────────────────────── */
+async function loadBanks() {
+  const banks = await (await api('/api/piggybanks')).json();
+  const grid  = document.getElementById('bankGrid');
+  const empty = document.getElementById('emptyState');
+  grid.innerHTML='';
+  if (!banks.length) { empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+  banks.forEach(b => grid.appendChild(buildBankCard(b)));
+}
+
+function buildBankCard(bank) {
+  const pct      = bank.goal>0 ? Math.min(100,(bank.balance/bank.goal)*100) : 0;
+  const reached  = bank.goal>0 && bank.balance>=bank.goal;
+  const lockMsg  = clientPolicyCheck(bank);
+  const isLocked = !!lockMsg;
+  const pm       = POLICY_META[bank.withdrawalPolicy]||POLICY_META.free;
+
+  const card = document.createElement('div');
+  card.className = 'bank-card fade-in';
+  card.innerHTML = `
+    <div class="bank-card-header">
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        <div class="bank-card-icon"><i class="fas ${bank.icon}"></i></div>
+        <div>
+          <p class="bank-card-name">${escHtml(bank.name)}</p>
+          <p class="bank-card-goal-txt">${bank.goal>0?`Target: $${bank.goal.toFixed(2)}`:'No target set'}</p>
+        </div>
+      </div>
+      <button class="bank-card-del" onclick="deleteBank('${bank.id}')"><i class="fas fa-trash-alt"></i></button>
+    </div>
+    <div>
+      <span class="policy-badge ${pm.cls}"><i class="fas ${pm.icon}" style="font-size:.65rem;"></i>${pm.text}${bank.coolingDays?` · ${bank.coolingDays}d`:''}</span>
+    </div>
+    <p class="bank-balance">$${bank.balance.toFixed(2)}</p>
+    ${bank.goal>0?`
+    <div class="bank-progress-track"><div class="v-progress-fill${reached?' done':''}" style="width:${pct}%;"></div></div>
+    <p class="bank-progress-pct${reached?' done':''}">${pct.toFixed(0)}%${reached?' — Goal reached 🎉':` of $${bank.goal.toFixed(2)}`}</p>
+    `:'<div style="margin-bottom:.75rem;"></div>'}
+    ${isLocked?`<div class="lock-banner"><p>${escHtml(lockMsg)}</p></div>`:''}
+    <div class="bank-btn-row">
+      <button onclick="openTx('${bank.id}','deposit','${escHtml(bank.name)}',${bank.goal},${bank.balance})" class="v-btn-deposit">
+        <i class="fas fa-plus" style="font-size:.7rem;margin-right:4px;"></i>Deposit
+      </button>
+      <button onclick="openTx('${bank.id}','withdraw','${escHtml(bank.name)}',${bank.goal},${bank.balance})"
+        class="${isLocked?'v-btn-withdraw-locked':'v-btn-withdraw'}">
+        <i class="fas ${isLocked?'fa-lock':'fa-minus'}" style="font-size:.7rem;margin-right:4px;"></i>Withdraw
+      </button>
+    </div>`;
+  return card;
+}
+
+function clientPolicyCheck(bank) {
+  const {withdrawalPolicy:wp,coolingDays:cd,goal,balance,createdAt} = bank;
+  const gr = goal>0 && balance>=goal;
+  const ds = (Date.now()-new Date(createdAt).getTime())/86400000;
+  const co = ds>=(cd||0);
+  if (wp==='goal_only') return gr?null:`🔒 Locked — reach $${goal.toFixed(2)} first`;
+  if (wp==='cooling') { if(co)return null; const l=Math.ceil((cd||0)-ds); return `🕐 Cooling — ${l} day${l!==1?'s':''} remaining`; }
+  if (wp==='goal_and_cooling') {
+    const p=[];
+    if(!gr&&goal>0) p.push(`reach $${goal.toFixed(2)} goal`);
+    if(!co){const l=Math.ceil((cd||0)-ds);p.push(`wait ${l} day${l!==1?'s':''}`);}
+    return p.length?`🔒 ${p.join(' & ')} to unlock`:null;
+  }
+  return null;
+}
+
+/* ── HABITS ──────────────────────────────────────────────── */
+async function loadHabits() {
+  const stats = await (await api('/api/stats')).json();
+  document.getElementById('habitCurrentStreak').textContent = stats.currentStreak;
+  document.getElementById('habitLongest').textContent       = stats.longestStreak;
+  document.getElementById('habitTotalDeps').textContent     = stats.totalDeposits;
+  document.getElementById('habitActiveDays').textContent    = stats.uniqueDepositDays;
+
+  // Calendar
+  const cal = document.getElementById('habitCalendar');
+  cal.innerHTML='';
+  const act = stats.activityMap||{};
+  Object.keys(act).sort().forEach(k => {
+    const c=document.createElement('div');
+    c.className=`cal-cell ${act[k]?'cal-active':'cal-inactive'}`;
+    c.title=k; cal.appendChild(c);
+  });
+
+  // Milestones
+  const mc = document.getElementById('milestones');
+  mc.innerHTML='';
+  STREAK_MILESTONES.forEach(m => {
+    const done=stats.longestStreak>=m.days;
+    const pct=Math.min(100,(stats.longestStreak/m.days)*100);
+    const el=document.createElement('div');
+    el.className='milestone-row';
+    el.innerHTML=`
+      <div class="milestone-emoji" style="${done?'':'opacity:.3'}">${m.icon}</div>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+          <p class="milestone-label${done?'':' locked'}">${m.label}</p>
+          <p class="milestone-check${done?'':' locked'}">${done?'✓ Done':`${m.days}d`}</p>
+        </div>
+        <div class="bank-progress-track">
+          <div class="v-progress-fill${done?' done':''}" style="width:${pct}%;"></div>
+        </div>
+      </div>`;
+    mc.appendChild(el);
+  });
+}
+
+/* ── PROFILE ─────────────────────────────────────────────── */
+async function loadProfile() {
+  const [sR,badR] = await Promise.all([api('/api/stats'),api('/api/badges')]);
+  const stats  = await sR.json();
+  const badges = await badR.json();
+  document.getElementById('profileBanks').textContent  = stats.bankCount;
+  document.getElementById('profileGoals').textContent  = stats.goalsMet;
+  document.getElementById('profileStreak').textContent = `${stats.currentStreak}🔥`;
+
+  const earned=badges.filter(b=>b.earned).length;
+  document.getElementById('badgeProgress').textContent=`${earned} / ${badges.length}`;
+
+  const grid=document.getElementById('badgeGrid');
+  grid.innerHTML='';
+  badges.forEach(b=>{
+    const el=document.createElement('div');
+    el.className=`v-badge ${b.earned?'earned':'locked'}`;
+    el.innerHTML=`
+      <div class="v-badge-emoji">${b.icon}</div>
+      <p class="v-badge-title">${b.title}</p>
+      <p class="v-badge-desc">${b.desc}</p>
+      <p class="v-badge-status ${b.earned?'earned-s':'locked-s'}">${b.earned?'✦ Earned':'Locked'}</p>`;
+    grid.appendChild(el);
+  });
+}
+
+/* ── CREATE DIALOG ───────────────────────────────────────── */
+function openCreateDialog() { document.getElementById('createDialog').showModal(); }
+
+function closeCreateDialog() {
+  document.getElementById('createDialog').close();
+  document.getElementById('newBankName').value='';
+  document.getElementById('newBankGoal').value='';
+  document.getElementById('createError').classList.remove('show');
+  selectedPolicy='free';
+  document.querySelector('input[name="withdrawalPolicy"][value="free"]').checked=true;
+  document.querySelectorAll('.policy-opt').forEach(el=>{
+    const sel=el.querySelector('input').checked;
+    el.classList.toggle('active-policy',sel);
+  });
+  document.getElementById('coolingDaysRow').style.display='none';
+}
+
+function buildIconPicker() {
+  const picker=document.getElementById('iconPicker');
+  picker.innerHTML='';
+  ICONS.forEach(key=>{
+    const btn=document.createElement('button');
+    btn.type='button'; btn.dataset.icon=key;
+    btn.className=`icon-btn${key===selectedIcon?' selected':''}`;
+    btn.innerHTML=`<i class="fas ${key}"></i>`;
+    btn.onclick=()=>{
+      selectedIcon=key;
+      picker.querySelectorAll('.icon-btn').forEach(b=>{
+        b.classList.toggle('selected',b.dataset.icon===key);
+      });
+    };
+    picker.appendChild(btn);
+  });
+}
+
+function setupPolicyListeners() {
+  document.querySelectorAll('input[name="withdrawalPolicy"]').forEach(radio=>{
+    radio.addEventListener('change',()=>{
+      selectedPolicy=radio.value;
+      document.querySelectorAll('.policy-opt').forEach(el=>{
+        el.classList.toggle('active-policy',el.querySelector('input').checked);
+      });
+      document.getElementById('coolingDaysRow').style.display=
+        ['cooling','goal_and_cooling'].includes(radio.value)?'block':'none';
+    });
+  });
+}
+
+async function createBank() {
+  const name=document.getElementById('newBankName').value.trim();
+  const goal=document.getElementById('newBankGoal').value;
+  const days=document.getElementById('coolingDays').value;
+  const errEl=document.getElementById('createError');
+  if(!name){errEl.textContent='Please enter a name.';errEl.classList.add('show');return;}
+  const res=await fetch('/api/piggybanks',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,icon:selectedIcon,goal:parseFloat(goal)||0,withdrawalPolicy:selectedPolicy,coolingDays:parseInt(days,10)||0})});
+  const data=await res.json();
+  if(!res.ok){errEl.textContent=data.error;errEl.classList.add('show');return;}
+  closeCreateDialog();
+  await refreshAll();
+  switchTab('banks');
+}
+
+/* ── TRANSACTIONS ────────────────────────────────────────── */
+function openTx(bankId,type,bankName,bankGoal,bankBalance) {
+  currentTxBankId=bankId; currentTxType=type;
+  txSnapshot={goal:bankGoal,balance:bankBalance};
+  document.getElementById('txTitle').textContent    = type==='deposit'?'Deposit Funds':'Withdraw Funds';
+  document.getElementById('txSubtitle').textContent = bankName;
+  document.getElementById('txAmount').value='';
+  document.getElementById('txError').classList.remove('show');
+  const cb=document.getElementById('txConfirmBtn');
+  cb.style.background = type==='deposit'
+    ? 'linear-gradient(135deg,#10b981,#059669)'
+    : 'linear-gradient(135deg,#c9a96e,#a8844a)';
+  document.getElementById('txDialog').showModal();
+}
+
+async function confirmTransaction() {
+  const amount=parseFloat(document.getElementById('txAmount').value);
+  const errEl=document.getElementById('txError');
+  if(!amount||amount<=0){errEl.textContent='Enter a valid amount.';errEl.classList.add('show');return;}
+  const res=await fetch(`/api/piggybanks/${currentTxBankId}/${currentTxType}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount})});
+  const data=await res.json();
+  if(!res.ok){errEl.textContent=data.error;errEl.classList.add('show');return;}
+  document.getElementById('txDialog').close();
+  if(currentTxType==='deposit'&&txSnapshot&&txSnapshot.goal>0){
+    if(txSnapshot.balance<txSnapshot.goal&&data.balance>=data.goal){
+      await refreshAll();
+      showGoalCelebration(data.name,data.balance,data.goal);
+      return;
+    }
+  }
+  await refreshAll();
+}
+
+/* ── CELEBRATION ─────────────────────────────────────────── */
+const GOAL_EMOJIS=['🎉','🏆','🎯','💎','🚀','⭐','🥳','💰'];
+function showGoalCelebration(bankName,balance,goal) {
+  document.getElementById('celebrationEmoji').textContent = GOAL_EMOJIS[Math.floor(Math.random()*GOAL_EMOJIS.length)];
+  document.getElementById('celebrationBankName').textContent = `"${bankName}"`;
+  document.getElementById('celebrationAmount').textContent  = `$${balance.toFixed(2)} saved — $${goal.toFixed(2)} goal achieved`;
+  const modal=document.getElementById('celebrationModal');
+  modal.style.display='flex';
+  modal.classList.add('show');
+  fireConfetti();
+}
+function fireConfetti() {
+  const colors=['#c9a96e','#e8c88e','#10b981','#f0e9df','#a8844a','#fbbf24'];
+  confetti({particleCount:130,spread:80,origin:{y:.55},colors,startVelocity:55,scalar:1.1,ticks:260});
+  setTimeout(()=>confetti({particleCount:50,angle:60,spread:60,origin:{x:0,y:.65},colors,startVelocity:45}),120);
+  setTimeout(()=>confetti({particleCount:50,angle:120,spread:60,origin:{x:1,y:.65},colors,startVelocity:45}),120);
+  setTimeout(()=>confetti({particleCount:50,spread:120,origin:{y:0},gravity:.6,scalar:.85,colors,ticks:400}),350);
+}
+function closeCelebration() {
+  const modal=document.getElementById('celebrationModal');
+  modal.classList.remove('show');
+  modal.style.display='none';
+}
+
+/* ── DELETE ──────────────────────────────────────────────── */
+let _pendingDeleteId = null;
+
+function deleteBank(id) {
+  _pendingDeleteId = id;
+  // Walk up from any element that references this bank id to find its name
+  const nameEl = document.querySelector(`.bank-card [onclick*="'${id}'"]`)
+    ?.closest('.bank-card')?.querySelector('.bank-card-name');
+  const name = nameEl ? `"${nameEl.textContent.trim()}"` : 'this vault';
+  document.getElementById('deleteDialogMsg').textContent =
+    `You are about to permanently delete ${name}. All deposits and history will be erased.`;
+  document.getElementById('deleteConfirmBtn').onclick = confirmDelete;
+  document.getElementById('deleteDialog').showModal();
+}
+
+async function confirmDelete() {
+  if (!_pendingDeleteId) return;
+  document.getElementById('deleteDialog').close();
+  await fetch(`/api/piggybanks/${_pendingDeleteId}`, { method: 'DELETE' });
+  _pendingDeleteId = null;
+  await refreshAll();
+}
+
+/* ── LOGOUT ──────────────────────────────────────────────── */
+async function logout() {
+  await fetch('/api/logout',{method:'POST'});
+  window.location.href='/';
+}
+
+/* ══ MARCUS CHAT ═════════════════════════════════════════ */
+let chatHistory=[],isMarcusBusy=false,chatOpened=false;
+const MARCUS_INTROS=[
+  "Hey! Marcus here. What's on your mind — savings, goals, or just want a quick check-in on where you're at?",
+  "Hey, good to hear from you. What can I help you with today?",
+  "Hi! Drop me a message — whether it's about your goals, your streak, or you want to talk through a money decision.",
+];
+
+function openChat() {
+  const ov=document.getElementById('chatOverlay');
+  ov.style.display='flex';
+  document.body.style.overflow='hidden';
+  document.getElementById('chatDateChip').textContent=new Date().toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long'});
+  if(!chatOpened){
+    chatOpened=true;
+    setTimeout(()=>appendBubble('marcus',MARCUS_INTROS[Math.floor(Math.random()*MARCUS_INTROS.length)]),400);
+    setTimeout(injectChips,700);
+  }
+  setTimeout(()=>{scrollChatBottom();document.getElementById('chatInput').focus();},100);
+}
+function closeChat(){document.getElementById('chatOverlay').style.display='none';document.body.style.overflow='';}
+function clearChat(){
+  if(!confirm('Clear the conversation with Marcus?'))return;
+  chatHistory=[];chatOpened=false;
+  document.getElementById('chatMessages').innerHTML='';
+  closeChat();
+}
+
+function appendBubble(role,text) {
+  const isUser=role==='user';
+  const msgs=document.getElementById('chatMessages');
+  const wrap=document.createElement('div');
+  wrap.className=`chat-bubble-wrap ${isUser?'user':'marcus'}`;
+  const time=new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',hour12:true});
+  wrap.innerHTML=`
+    <div style="max-width:78%;display:flex;flex-direction:column;align-items:${isUser?'flex-end':'flex-start'};gap:3px;">
+      <div class="chat-bubble ${isUser?'user':'marcus'}">${escHtml(text).replace(/\n/g,'<br>')}</div>
+      <div class="bubble-meta${isUser?' user':''}">
+        <span>${time}</span>
+        ${isUser?'<i class="fas fa-check-double" style="font-size:.6rem;color:var(--gold);"></i>':''}
+      </div>
+    </div>`;
+  msgs.appendChild(wrap);
+  scrollChatBottom();
+}
+function scrollChatBottom(){const m=document.getElementById('chatMessages');m.scrollTop=m.scrollHeight;}
+function showTyping(){document.getElementById('typingIndicator').style.display='block';document.getElementById('marcusStatus').textContent='typing…';scrollChatBottom();}
+function hideTyping(){document.getElementById('typingIndicator').style.display='none';document.getElementById('marcusStatus').textContent='online';}
+function autoGrowInput(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+async function sendMessage() {
+  if(isMarcusBusy)return;
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';inp.style.height='auto';
+  appendBubble('user',text);
+  chatHistory.push({role:'user',content:text});
+  isMarcusBusy=true;
+  const delay=800+Math.random()*900;
+  setTimeout(showTyping,300);
+  try{
+    const res=await fetch('/api/advisor/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})});
+    const data=await res.json();
+    await new Promise(r=>setTimeout(r,delay));
+    hideTyping();
+    if(!res.ok){appendBubble('marcus',data.error||'Something went wrong — try again.');return;}
+    chatHistory.push({role:'assistant',content:data.reply});
+    appendBubble('marcus',data.reply);
+  }catch{hideTyping();appendBubble('marcus','Lost connection — try again.');}
+  finally{isMarcusBusy=false;}
+}
+
+function injectChips(){
+  const existing=document.getElementById('chipRow');
+  if(existing)return;
+  const msgs=document.getElementById('chatMessages');
+  const row=document.createElement('div');
+  row.id='chipRow';row.className='chip-row';
+  ['How am I doing overall?','Which goal should I focus on?','Tips to save more?','Am I on track?'].forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='chip-btn';btn.textContent=c;
+    btn.onclick=()=>{row.remove();document.getElementById('chatInput').value=c;sendMessage();};
+    row.appendChild(btn);
+  });
+  msgs.appendChild(row);scrollChatBottom();
+}
+
+/* ── UTIL ────────────────────────────────────────────────── */
+function escHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+</body>
+</html>

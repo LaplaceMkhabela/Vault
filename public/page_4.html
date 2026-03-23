@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault — Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#07080f; --card:#131720;
+      --border:rgba(255,255,255,0.07); --border-gold:rgba(201,169,110,0.2);
+      --gold:#c9a96e; --gold-dim:rgba(201,169,110,0.08);
+      --text:#f0e9df; --text-muted:rgba(240,233,223,0.45); --error:#f87171;
+    }
+    html, body { min-height:100%; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+
+    .bg-mesh {
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(201,169,110,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 20% 80%, rgba(16,185,129,0.04) 0%, transparent 55%);
+    }
+    .grain {
+      position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.02;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px;
+    }
+    .page {
+      position:relative; z-index:2; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:2.5rem 1.25rem;
+    }
+     /* Logo */
+    .logo { display:flex; align-items:center; gap:.6rem; margin-bottom:2rem; }
+    .logo-icon {
+      width:34px; height:34px; border-radius:8px;
+      background:var(--gold-dim); border:1px solid var(--border-gold);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .logo-icon i { color:var(--gold); font-size:.85rem; }
+    .logo-name { font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:400; letter-spacing:.1em; }
+    
+    /* Card */
+    .card {
+      width:100%; max-width:420px;
+      background:var(--card); border:1px solid var(--border); border-radius:16px;
+      padding:2rem;
+    }
+    .card-title { font-family:'Cormorant Garamond',serif; font-size:1.75rem; font-weight:400; letter-spacing:.02em; margin-bottom:.3rem; }
+    .card-sub { font-size:.82rem; color:var(--text-muted); margin-bottom:1.75rem; line-height:1.5; }
+
+    /* Fields */
+    .field { margin-bottom:1.1rem; }
+    .field label { display:block; font-size:.7rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:.45rem; }
+    .input-wrap { position:relative; }
+    .input-wrap .icon { position:absolute; left:.9rem; top:50%; transform:translateY(-50%); color:rgba(240,233,223,0.25); font-size:.78rem; pointer-events:none; }
+    .input-wrap input {
+      width:100%; padding:.8rem .9rem .8rem 2.35rem;
+      background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color:rgba(240,233,223,0.2); }
+    .input-wrap input:focus { border-color:rgba(201,169,110,.4); box-shadow:0 0 0 3px rgba(201,169,110,.08); }
+    .eye-btn {
+      position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer;
+      color:rgba(240,233,223,0.25); font-size:.78rem;
+      transition:color .2s;
+    }
+    .eye-btn:hover { color:var(--gold); }
+
+    /* Terms */
+    .terms { display:flex; align-items:flex-start; gap:.7rem; margin-bottom:1.4rem; }
+    .terms input[type=checkbox] { width:15px; height:15px; accent-color:var(--gold); margin-top:2px; flex-shrink:0; }
+    .terms label { font-size:.77rem; color:var(--text-muted); line-height:1.5; }
+    .terms a { color:var(--gold); text-decoration:none; }
+    .terms a:hover { text-decoration:underline; }
+
+    /* Submit */
+    .btn-submit {
+      width:100%; padding:.9rem;
+      background:linear-gradient(135deg,#c9a96e,#a8844a);
+      color:#07080f; font-family:'DM Sans',sans-serif; font-size:.82rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+      border:none; border-radius:8px; cursor:pointer;
+      box-shadow:0 6px 24px rgba(201,169,110,.2);
+      transition:opacity .2s, transform .15s;
+      display:flex; align-items:center; justify-content:center; gap:.6rem;
+    }
+    .btn-submit:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+
+    /* Or divider */
+    .or-divider { position:relative; text-align:center; margin:1.4rem 0; }
+    .or-divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:var(--border); }
+    .or-divider span { position:relative; background:var(--card); padding:0 1rem; font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--text-muted); }
+
+    /* Social */
+    .social-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+    .btn-social {
+      display:flex; align-items:center; justify-content:center; gap:.55rem;
+      padding:.72rem; background:rgba(255,255,255,0.04);
+      border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500;
+      cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .btn-social:hover { border-color:var(--border-gold); background:var(--gold-dim); }
+
+    /* Footer note */
+    .footer-note { margin-top:1.4rem; text-align:center; font-size:.8rem; color:var(--text-muted); }
+    .footer-note a { color:var(--gold); text-decoration:none; font-weight:600; }
+    .footer-note a:hover { text-decoration:underline; }
+
+     /* Error */
+    .form-error { color:var(--error); font-size:.8rem; text-align:center; margin-bottom:.7rem; }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="grain"></div>
+  <div class="page">
+
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-piggy-bank"></i></div>
+      <span class="logo-name">Vault</span>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Open your account</h2>
+      <p class="card-sub">Begin your journey to disciplined, intentional saving.</p>
+
+      <form id="registrationForm">
+        <div class="field">
+          <label>Full Name</label>
+          <div class="input-wrap">
+            <i class="icon far fa-user"></i>
+            <input type="text" required placeholder="Alexandra Chen">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="icon far fa-envelope"></i>
+            <input type="email" required placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="icon fas fa-lock"></i>
+            <input type="password" required placeholder="8+ characters" style="padding-right:2.5rem;">
+            <button type="button" class="eye-btn"><i class="far fa-eye"></i></button>
+          </div>
+        </div>
+
+        <div class="terms">
+          <input type="checkbox" id="terms" required>
+          <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Create Account <i class="fas fa-arrow-right" style="font-size:.7rem;"></i>
+        </button>
+      </form>
+
+      <div class="or-divider"><span>or continue with</span></div>
+
+      <div class="social-grid">
+        <button class="btn-social">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" style="width:15px;height:15px;" alt="Google">
+          Google
+        </button>
+        <button class="btn-social">
+          <i class="fab fa-apple"></i> Apple
+        </button>
+      </div>
+    </div>
+
+    <p class="footer-note">Already have an account? <a href="/login">Sign in</a></p>
+
+  </div>
+  <script>
+    // Password visibility toggle
+    document.querySelector('.eye-btn').addEventListener('click', function() {
+      const inp = this.closest('.input-wrap').querySelector('input');
+      const ic  = this.querySelector('i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ic.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        ic.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    });
+
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn      = this.querySelector('button[type="submit"]');
+      const nameEl   = this.querySelector('input[type="text"]');
+      const emailEl  = this.querySelector('input[type="email"]');
+      const passEl   = this.querySelector('input[type="password"]');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Setting up...';
+
+      try {
+        const res  = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nameEl.value, email: emailEl.value, password: passEl.value })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Registration failed. Please try again.');
+          btn.innerHTML = 'Create Account <i class="fas fa-arrow-right" style="font-size:.7rem;"></i>';
+          btn.disabled = false;
+          return;
+        }
+
+        btn.innerHTML = '<i class="fas fa-check"></i> Welcome to Vault';
+        setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+
+      } catch {
+        showError('Network error. Please try again.');
+        btn.innerHTML = 'Create Account';
+        btn.disabled = false;
+      }
+    });
+
+    function showError(msg) {
+      let el = document.getElementById('form-error');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'form-error';
+        el.className = 'form-error';
+        document.getElementById('registrationForm').prepend(el);
+      }
+      el.textContent = msg;
+    }
+  </script>
+  
+</body>
+</html>

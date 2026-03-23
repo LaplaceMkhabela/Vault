@@ -175,6 +175,52 @@
     <p class="footer-note">New to Vault? <a href="/signup">Create an account</a></p>
 
   </div>
-  
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn        = this.querySelector('button[type="submit"]');
+      const emailEl    = this.querySelector('input[type="email"]');
+      const passwordEl = this.querySelector('input[type="password"]');
+      const rememberEl = this.querySelector('#remember');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Authenticating...';
+
+      try {
+        const res  = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailEl.value, password: passwordEl.value, remember: rememberEl.checked })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Login failed. Please try again.');
+          btn.innerHTML = 'Sign In <i class="fas fa-sign-in-alt" style="font-size:.75rem;"></i>';
+          btn.disabled = false;
+          return;
+        }
+
+        btn.innerHTML = '<i class="fas fa-check"></i> Welcome back';
+        setTimeout(() => { window.location.href = '/dashboard'; }, 700);
+
+      } catch {
+        showError('Network error. Please try again.');
+        btn.innerHTML = 'Sign In <i class="fas fa-sign-in-alt" style="font-size:.75rem;"></i>';
+        btn.disabled = false;
+      }
+    });
+
+    function showError(msg) {
+      let el = document.getElementById('form-error');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'form-error';
+        el.className = 'form-error';
+        document.getElementById('loginForm').prepend(el);
+      }
+      el.textContent = msg;
+    }
+  </script>
 </body>
 </html>

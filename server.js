@@ -276,5 +276,111 @@ app.delete('/api/piggybanks/:id', requireAuth, (req, res) => {
   res.json({ message: 'Piggy bank deleted.' });
 });
 
+// ═══════════════════════════════════════════════════════════
+//  STATS, STREAKS & BADGES
+// ═══════════════════════════════════════════════════════════
+
+const BADGE_DEFS = [
+  { id:'first_deposit',  icon:'🐣', title:'First Deposit',   desc:'Made your very first deposit.',
+    earned:(s)    => s.totalDeposits >= 1 },
+  { id:'three_day',      icon:'🔥', title:'On Fire',         desc:'Saved 3 days in a row.',
+    earned:(s)    => s.currentStreak >= 3 },
+  { id:'week_warrior',   icon:'⚡', title:'Week Warrior',    desc:'Maintained a 7-day savings streak.',
+    earned:(s)    => s.longestStreak >= 7 },
+  { id:'month_master',   icon:'🏆', title:'Month Master',    desc:'30-day savings streak achieved.',
+    earned:(s)    => s.longestStreak >= 30 },
+  { id:'goal_getter',    icon:'🎯', title:'Goal Getter',     desc:'Reached a savings goal.',
+    earned:(s,b)  => b.some(bk => bk.goal > 0 && bk.balance >= bk.goal) },
+  { id:'multi_saver',    icon:'🐷', title:'Multi-Saver',     desc:'Created 3 or more piggy banks.',
+    earned:(s,b)  => b.length >= 3 },
+  { id:'ton_club',       icon:'💰', title:'$100 Club',       desc:'Total savings hit $100.',
+    earned:(s)    => s.totalSaved >= 100 },
+  { id:'grand_saver',    icon:'💎', title:'Grand Saver',     desc:'Total savings hit $1,000.',
+    earned:(s)    => s.totalSaved >= 1000 },
+  { id:'streak_master',  icon:'🌟', title:'Streak Master',   desc:'14-day savings streak.',
+    earned:(s)    => s.longestStreak >= 14 },
+  { id:'consistent',     icon:'📅', title:'Consistent',      desc:'Deposited on 10 separate days.',
+    earned:(s)    => s.uniqueDepositDays >= 10 },
+  { id:'big_depositor',  icon:'🚀', title:'Big Depositor',   desc:'Made 20 or more deposits.',
+    earned:(s)    => s.totalDeposits >= 20 },
+  { id:'two_goals',      icon:'🎪', title:'Double Trouble',  desc:'Reached 2 different goals.',
+    earned:(s,b)  => b.filter(bk => bk.goal > 0 && bk.balance >= bk.goal).length >= 2 },
+];
+
+function computeStats(userId) {
+  const banks = db.getBanksByUser(userId);
+  const totalSaved = parseFloat(banks.reduce((s, b) => s + b.balance, 0).toFixed(2));
+  const goalsMet   = banks.filter(b => b.goal > 0 && b.balance >= b.goal).length;
+
+  // Efficient DB query — no need to load every transaction into JS
+  const { depositDays, totalDeposits, totalSavedEver } = db.getStatsData(userId);
+
+  const depositDaySet = new Set(depositDays);
+
+  // ── Current streak ───────────────────────────────────────
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let currentStreak = 0;
+  const startFrom   = depositDaySet.has(todayStr) ? 0 : 1; // allow yesterday to keep streak alive
+
+  for (let i = startFrom; ; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    if (depositDaySet.has(key)) currentStreak++;
+    else break;
+  }
+
+  // ── Longest streak ───────────────────────────────────────
+  let longestStreak = 0, run = 0;
+  depositDays.forEach((day, i) => {
+    if (i === 0) { run = 1; return; }
+    const diff = (new Date(day) - new Date(depositDays[i - 1])) / 86_400_000;
+    run = diff === 1 ? run + 1 : 1;
+    if (run > longestStreak) longestStreak = run;
+  });
+  if (depositDays.length === 1) longestStreak = 1;
+
+  // ── Last 30 days activity map ────────────────────────────
+  const activityMap = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    activityMap[key] = depositDaySet.has(key);
+  }
+
+  return {
+    totalSaved,
+    totalSavedEver:   parseFloat(totalSavedEver.toFixed(2)),
+    totalDeposits,
+    uniqueDepositDays: depositDaySet.size,
+    currentStreak,
+    longestStreak,
+    bankCount: banks.length,
+    goalsMet,
+    activityMap,
+  };
+}
+
+/** GET /api/stats */
+app.get('/api/stats', requireAuth, (req, res) => {
+  res.json(computeStats(req.session.userId));
+});
+
+/** GET /api/badges */
+app.get('/api/badges', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  const stats  = computeStats(userId);
+  const banks  = db.getBanksByUser(userId);
+
+  res.json(BADGE_DEFS.map(def => ({
+    id:     def.id,
+    icon:   def.icon,
+    title:  def.title,
+    desc:   def.desc,
+    earned: def.earned(stats, banks),
+  })));
+});
+
 const app  = express();
 const PORT = process.env.PORT || 3000;

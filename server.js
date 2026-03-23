@@ -13,6 +13,12 @@ const path     = require('path');
 const { v4: uuidv4 } = require('uuid');
 const db = require('./db');
 
+// ── Database ──────────────────────────────────────────────────
+const db = require('./db');
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+
 // ── Middleware ────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -504,6 +510,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
-const app  = express();
-const PORT = process.env.PORT || 3000;

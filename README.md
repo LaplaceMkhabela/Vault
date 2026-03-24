@@ -57,7 +57,7 @@
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/vault.git
+git clone https://github.com/LaplaceMkhabela/Vault.git
 cd vault
 
 # 2. Install dependencies
@@ -214,39 +214,6 @@ vault/
 
 ---
 
-## 🚢 Deploying to Railway
-
-```bash
-# 1. Push your code to GitHub
-git init
-git add .
-git commit -m "initial commit"
-git remote add origin https://github.com/yourusername/vault.git
-git push -u origin main
-
-# 2. Go to railway.app
-# → New Project → Deploy from GitHub → Select your repo
-
-# 3. Add environment variables in the Railway dashboard:
-#    SESSION_SECRET  → a long random string
-#    GROQ_API_KEY    → your Groq key
-
-# 4. Railway auto-detects Node.js and runs npm start
-```
-
-> ⚠️ The `piggybank.db` file is ephemeral on Railway — it resets on redeploy. For persistent storage, use Railway's managed PostgreSQL add-on and swap the `node:sqlite` layer for `pg`.
-
----
-
-## 📋 .gitignore
-
-```
-node_modules/
-piggybank.db
-.env
-```
-
----
 
 ## 📄 Licence
 

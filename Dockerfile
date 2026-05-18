@@ -12,4 +12,4 @@ COPY . .
 # Expose port (Cloud Run defaults to 8080 but will map process.env.PORT automatically)
 EXPOSE 8080
 
-CMD [ "node", "index.js" ]
+CMD [ "node", "server.js" ]

@@ -50,16 +50,20 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ────────────────────────────────────────────────
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// CRITICAL FOR CLOUD RUN: Trust the Google Cloud Load Balancer proxy
+app.set('trust proxy', 1);
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'piggybank-super-secret-key-change-in-prod',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,   // set true when behind HTTPS
+    secure: isProduction,   // Dynamically enforce true when deployed behind Cloud Run's HTTPS
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   },

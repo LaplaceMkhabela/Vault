@@ -1,13 +1,15 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+# Install only production dependencies
+RUN npm ci --only=production
 
 COPY . .
 
-EXPOSE 3000
+# Expose port (Cloud Run defaults to 8080 but will map process.env.PORT automatically)
+EXPOSE 8080
 
-CMD [ "node", "server.js" ]
+CMD [ "node", "index.js" ]
